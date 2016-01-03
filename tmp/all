@@ -8,10 +8,10 @@ m,2jKDldw
 @obj_declare bob
 @obj_evt 9 38
 show_message("BOB UP EVENT");
-
+@obj_evt 0 0
+show_message("BOB CREATE");
 
 @obj_declare susy
-
 @obj_evt 9 38
 show_message("SUSY DESTROYS FRIENDS");
 with(global.__bob) {
@@ -20,16 +20,26 @@ with(global.__bob) {
 with(global.__greg) {
     instance_destroy();
 }
-
+@obj_evt 9 40
+room_goto(global.__next_room);
 @obj_evt 0 0
 show_message("SUSY CREATE");
-
 
 @obj_declare greg
 @obj_evt 9 38
 show_message("GREG UP EVENT");
+@obj_evt 0 0
+show_message("GREG CREATE");
 
 @rm_declare main_room
 bob
 susy
 greg
+@import_evt
+show_message("MAIN ROOM IMPORT EVENT");
+show_message(string(global.__bob));
+
+@rm_declare next_room
+bob
+
+@end
