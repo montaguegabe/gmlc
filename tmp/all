@@ -37,7 +37,6 @@ susy
 greg
 @import_evt
 show_message("MAIN ROOM IMPORT EVENT");
-show_message(string(global.__bob));
 
 @rm_declare next_room
 bob
