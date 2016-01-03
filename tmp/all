@@ -1,0 +1,35 @@
+21kewfh3j
+12kljfm,m
+12jioksdn
+kvmn2h32j
+m,2jKDldw
+@gml
+
+@obj_declare bob
+@obj_evt 9 38
+show_message("BOB UP EVENT");
+
+
+@obj_declare susy
+
+@obj_evt 9 38
+show_message("SUSY DESTROYS FRIENDS");
+with(global.__bob) {
+    instance_destroy();
+}
+with(global.__greg) {
+    instance_destroy();
+}
+
+@obj_evt 0 0
+show_message("SUSY CREATE");
+
+
+@obj_declare greg
+@obj_evt 9 38
+show_message("GREG UP EVENT");
+
+@rm_declare main_room
+bob
+susy
+greg
