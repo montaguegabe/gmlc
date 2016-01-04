@@ -4,7 +4,6 @@ import sys
 import argparse
 import glob
 import os
-import re
 import shutil
 from gmlc_compiler import Compiler, CHAR_SYMBOLS
 from gmlc_utils import *
@@ -65,19 +64,17 @@ def main():
         for source in compile_files:
             with open(source,'r') as f_in:
                 line = 1
-                col = 1
                 for linestr in f_in:
-                    words = re.split(' |\n', linestr)
-                    symbols = flatten(map(lambda word: explode_keep(word, CHAR_SYMBOLS), words))
-                    symbols = filter(None, symbols)
+                    
+                    symbols = line_to_symbols(linestr, CHAR_SYMBOLS)
+                    for symbol, idx in symbols:
 
-                    for symbol in symbols:
+                        col = idx + 1
 
                         # Generate compiled code, warnings, errors
                         results = compiler.feed(symbol)
                         error_num = process_feed_results(results, alerts)
 
-                        col += len(symbol)
                         if error_num > args.errorlim: break
 
                     line += 1

@@ -74,7 +74,7 @@ class Compiler(object):
 
     # Helper to add to data block
     def datablock_add(self, symbol):
-        self.datablock += " " + symbol + " "
+        self.datablock += symbol + " "
 
     def feed(self, symbol):
 
@@ -87,7 +87,7 @@ class Compiler(object):
 
             mod_string = None
             if is_import and not self.last_out_import:
-                mod_string = "\n@import_evt\n" + string
+                mod_string = "@import_evt\n" + string
             else:
                 mod_string = string
 
@@ -98,6 +98,8 @@ class Compiler(object):
         # Get context information
         ctx = self.context_stack[-1] if self.context_stack else None
 
+        #print "S, C, I:", symbol, str(ctx.typ) + "s" + str(ctx.stage) if ctx else None, self.indent_level
+
         # Parse global symbols
         if not ctx:
             if symbol == 'object':
@@ -107,9 +109,9 @@ class Compiler(object):
 
             # Error cases
             else:
-                erstr = "Unexpected symbol'" + symbol + "'."
+                erstr = "Unexpected symbol '" + symbol + "'."
                 if symbol in KEYWORDS:
-                    erstr += "Keywords of this type belong in resource declarations."
+                    erstr += " Keywords of this type belong in resource declarations."
                 errors.append(erstr)
 
         # Parse object declaration symbols
@@ -118,7 +120,7 @@ class Compiler(object):
             # Name of object
             if ctx.stage == 0:
                 errors.extend(validate_varname(symbol, ctx))
-                returned_output = output(returned_output, "\n@obj_declare " + symbol + "\n")
+                returned_output = output(returned_output, "@obj_declare " + symbol + "\n")
                 self.obj_names.add(symbol)
                 ctx.advance()
 
@@ -164,7 +166,7 @@ class Compiler(object):
             # Name of room
             if ctx.stage == 0:
                 errors.extend(validate_varname(symbol, ctx))
-                returned_output = output(returned_output, "\n@rm_declare " + symbol + "\n")
+                returned_output = output(returned_output, "@rm_declare " + symbol + "\n")
                 ctx.advance()
 
             # Curly following room name
@@ -177,7 +179,7 @@ class Compiler(object):
 
                 # Check if symbol is object
                 if symbol in self.obj_names:
-                    returned_output = output(returned_output, "\n" + symbol + "\n")
+                    returned_output = output(returned_output, symbol + "\n")
                     ctx.advance()
 
                 # Check nested declarations
@@ -220,7 +222,7 @@ class Compiler(object):
 
                 # Only GML object can follow commas
                 if symbol in self.obj_names:
-                    returned_output = output(returned_output, "\n" + symbol + "\n")
+                    returned_output = output(returned_output, symbol + "\n")
                     ctx.stage = 3
                 else:
                     errors.append("Expecting object name after ',' but instead found '" + symbol + "'.")
@@ -236,12 +238,12 @@ class Compiler(object):
                 ctx.advance()
 
             # Add data to block
-            if ctx.stage == 1:
+            elif ctx.stage == 1:
                 if symbol == '}':
 
                     # Output parsed data
                     prefix = "object" if self.context_stack[-2].typ == OBJ_DEC else "room"
-                    import_block = parse_properties(self.datablock, prefix)
+                    import_block = parse_properties(self.datablock, prefix) + "\n"
                     if import_block != None:
                         returned_output = output(returned_output, import_block, True)
                     else:
@@ -259,9 +261,10 @@ class Compiler(object):
                 ctx.advance()
 
             # Add data to block
-            if ctx.stage == 1:
+            elif ctx.stage == 1:
                 if symbol == '}' and self.indent_level == 0:
-                    returned_output = output(returned_output, self.datablock, True)
+                    returned_output = output(returned_output, self.datablock + "\n", True)
+                    self.context_stack.pop()
 
                 else:
                     if symbol == '{': self.indent_level += 1
@@ -278,7 +281,7 @@ class Compiler(object):
 
         # Prefix with initial if first time outputting
         if not self.has_out:
-            returned_output = "\n@gml\n" + returned_output
+            returned_output = "@gml\n" + returned_output
             self.has_out = True
 
         return (returned_output, warnings, errors)
@@ -286,9 +289,14 @@ class Compiler(object):
     # Get lingering errors, warnings, compilation blocks
     def feed_final(self):
 
-        # TODO
-        # CHECK INDENDATION LEVEL AND CONTEXT
-        return ("", [], [])
+        errors = []
+        warnings = []
+
+        if self.indent_level != 0:
+            errors.append("Curly brace mismatch. Expecting '}'.");
+        if self.context_stack:
+            errors.append("Source file ended in middle of " + self.context_stack[-1].label() + ".")
+        return ("", warnings, errors)
 
 # Checks valid GML variable name errors
 def valid_varname(name):
@@ -302,7 +310,7 @@ def validate_varname(name, ctx):
 
     if not valid_varname(name):
         erstr = "Invalid resource name in " + ctx.label() + "."
-        erstr += "Name '" + name + "' is not a valid GML name."
+        erstr += " Name '" + name + "' is not a valid GML name."
         return [erstr]
     return []
 
@@ -310,7 +318,7 @@ def validate_varname(name, ctx):
 def validate_symbol(symbol, ctx, expectations):
     if symbol not in expectations:
         erstr = "Unexpected symbol '" + symbol + "' in " + ctx.label() + "."
-        erstr += "Expected '" + "' or '".join(expectations) + "'."
+        erstr += " Expected '" + "' or '".join(expectations) + "'."
         return [erstr]
     return []
 
