@@ -88,6 +88,8 @@ class Compiler(object):
             mod_string = None
             if is_import and not self.last_out_import:
                 mod_string = "@import_evt\n" + string
+            elif not is_import and self.last_out_import:
+                mod_string = "@endimport\n" + string
             else:
                 mod_string = string
 
@@ -296,7 +298,7 @@ class Compiler(object):
             errors.append("Curly brace mismatch. Expecting '}'.");
         if self.context_stack:
             errors.append("Source file ended in middle of " + self.context_stack[-1].label() + ".")
-        return ("", warnings, errors)
+        return ("@end\n", warnings, errors)
 
 # Checks valid GML variable name errors
 def valid_varname(name):

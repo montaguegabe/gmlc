@@ -14,12 +14,15 @@ object greg {
 }
 
 room main_room {
-    bob, susy, greg
     import {
-        show_message("MAIN ROOM IMPORT EVENT");
+        show_message("MAIN ROOM IMPORT EVENT 1");
     }
+    import {
+        show_message("MAIN ROOM IMPORT EVENT 2");
+    }
+    bob, susy, greg
 }
 
 room next_room {
-bob
+    bob
 }
