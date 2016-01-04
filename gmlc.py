@@ -4,8 +4,8 @@ import sys
 import argparse
 import glob
 import os
+import re
 import shutil
-from enum import Enum
 from gmlc_compiler import Compiler, CHAR_SYMBOLS
 from gmlc_utils import *
 
@@ -19,7 +19,7 @@ class BColors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-class AlertType(Enum):
+class AlertType:
     ERR = 1
     WARN = 2
 
@@ -50,32 +50,34 @@ def main():
     with open(outpath, 'a') as f_out:
 
         # Helper to process feed result
-        def process_feed_results(results):
+        def process_feed_results(results, alerts):
             
             (out, warn, err) = results
-            map(lambda warning : alerts.append((alerttype.WARN source, line, col, warning)), warn)
-            map(lambda error : alerts.append((alerttype.ERR, source, line, col, error)), err)
-            error_num += len(err)
+            map(lambda warning : alerts.append((AlertType.WARN, source, line, col, warning)), warn)
+            map(lambda error : alerts.append((AlertType.ERR, source, line, col, error)), err)
 
             if out:
                 # Add transpiled code to executable
                 f_out.write(out)
 
+            return error_num + len(err)
+
         for source in compile_files:
             with open(source,'r') as f_in:
                 line = 1
                 col = 1
-                for line in f_in:
-                    words = line.split(' ')
-                    symbols = flatten(map(lambda word: explode_keep(word, CHAR_SYMBOLS)))
+                for linestr in f_in:
+                    words = re.split(' |\n', linestr)
+                    symbols = flatten(map(lambda word: explode_keep(word, CHAR_SYMBOLS), words))
+                    symbols = filter(None, symbols)
 
                     for symbol in symbols:
 
                         # Generate compiled code, warnings, errors
                         results = compiler.feed(symbol)
-                        process_feed_results(results)
+                        error_num = process_feed_results(results, alerts)
 
-                        col += len(word)
+                        col += len(symbol)
                         if error_num > args.errorlim: break
 
                     line += 1
@@ -85,7 +87,7 @@ def main():
 
         # Finalize compilation
         final_results = compiler.feed_final()
-        process_feed_results(final_results)
+        error_num = process_feed_results(final_results, alerts)
 
     # Notify the user of results
     map(lambda alert: print_alert(alert), alerts)
@@ -103,9 +105,9 @@ def print_alert(alert):
     (typ, source, line, col, string) = alert
 
     # Print type
-    if typ == alerttype.ERR:
+    if typ == AlertType.ERR:
         print BColors.FAIL + "ERROR" + BColors.ENDC,
-    elif typ == alerttype.WARN:
+    elif typ == AlertType.WARN:
         print BColors.WARNING + "WARNING" + BColors.ENDC,
 
     # Print location

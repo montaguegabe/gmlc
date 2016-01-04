@@ -1,5 +1,4 @@
 import ast
-from enum import Enum
 
 CHAR_SYMBOLS = frozenset([
     ':',
@@ -21,7 +20,7 @@ KEYWORDS = frozenset([
 SYMBOLS = CHAR_SYMBOLS.union(KEYWORDS)
 
 # A context class represents a general scope of expectation
-class CtxType(Enum):
+class CtxType:
     OBJ_DEC = 1
     RM_DEC = 2
     PROP = 3
@@ -30,7 +29,7 @@ class CtxType(Enum):
 
 class Ctx(object):
     def __init__(self, typ, stage=0):
-        super(Context, self).__init__()
+        super(Ctx, self).__init__()
         self.typ = typ
         self.stage = stage
 
@@ -38,15 +37,15 @@ class Ctx(object):
         self.stage += 1
 
     def label(self):
-        if self.typ == OBJ_DEC:
+        if self.typ == CtxType.OBJ_DEC:
             return "object declaration"
-        elif self.typ == RM_DEC:
+        elif self.typ == CtxType.RM_DEC:
             return "room declaration"
-        elif self.typ == PROP:
+        elif self.typ == CtxType.PROP:
             return "resource property dict parsing"
-        elif self.typ == IMPORT:
+        elif self.typ == CtxType.IMPORT:
             return "import event block"
-        elif self.typ == EVENT:
+        elif self.typ == CtxType.EVENT:
             return "event declaration"
         return ""
 
@@ -74,29 +73,33 @@ class Compiler(object):
         self.indent_level = 0
 
     # Helper to add to data block
-    def datablock_add(symbol):
+    def datablock_add(self, symbol):
         self.datablock += " " + symbol + " "
 
-    def feed(symbol):
+    def feed(self, symbol):
 
         returned_output = ""
         warnings = []
         errors = []
 
         # Helper function for appending output. Will dynamically prefix with a @import_evt line
-        def output(string, is_import=False):
+        def output(returned_output, string, is_import=False):
 
             mod_string = None
-            if is_import and not last_out_import:
+            if is_import and not self.last_out_import:
                 mod_string = "\n@import_evt\n" + string
             else:
                 mod_string = string
 
             returned_output += mod_string
             self.last_out_import = is_import
+            return returned_output
+
+        # Get context information
+        ctx = self.context_stack[-1] if self.context_stack else None
 
         # Parse global symbols
-        if not self.context_stack:
+        if not ctx:
             if symbol == 'object':
                 self.context_stack.append(Ctx(CtxType.OBJ_DEC))
             elif symbol == 'room':
@@ -109,16 +112,13 @@ class Compiler(object):
                     erstr += "Keywords of this type belong in resource declarations."
                 errors.append(erstr)
 
-        # Get context information
-        ctx = self.context_stack[-1]
-
         # Parse object declaration symbols
         elif ctx.typ == CtxType.OBJ_DEC:
 
             # Name of object
             if ctx.stage == 0:
                 errors.extend(validate_varname(symbol, ctx))
-                output("\n@obj_declare " + symbol + "\n")
+                returned_output = output(returned_output, "\n@obj_declare " + symbol + "\n")
                 self.obj_names.add(symbol)
                 ctx.advance()
 
@@ -131,11 +131,11 @@ class Compiler(object):
                     ctx.stage = 4
 
             # Name of parent
-            if ctx.stage == 0:
+            elif ctx.stage == 2:
                 errors.extend(validate_varname(symbol, ctx))
                 if symbol not in self.obj_names:
                     errors.append("No declared object matches name '" + symbol + "'.")
-                output("object_set_parent(global.__itp_res," + symbol + ");", True)
+                returned_output = output(returned_output, "object_set_parent(global.__itp_res," + symbol + ");", True)
                 ctx.advance()
 
             elif ctx.stage == 3:
@@ -155,6 +155,7 @@ class Compiler(object):
                     self.context_stack.append(Ctx(CtxType.IMPORT))
 
             else:
+                print ctx.stage
                 raise NotImplementedError()
 
         # Parse room declaration symbols
@@ -163,7 +164,7 @@ class Compiler(object):
             # Name of room
             if ctx.stage == 0:
                 errors.extend(validate_varname(symbol, ctx))
-                output("\n@rm_declare " + symbol + "\n")
+                returned_output = output(returned_output, "\n@rm_declare " + symbol + "\n")
                 ctx.advance()
 
             # Curly following room name
@@ -176,7 +177,7 @@ class Compiler(object):
 
                 # Check if symbol is object
                 if symbol in self.obj_names:
-                    output("\n" + symbol + "\n")
+                    returned_output = output(returned_output, "\n" + symbol + "\n")
                     ctx.advance()
 
                 # Check nested declarations
@@ -219,7 +220,7 @@ class Compiler(object):
 
                 # Only GML object can follow commas
                 if symbol in self.obj_names:
-                    output("\n" + symbol + "\n")
+                    returned_output = output(returned_output, "\n" + symbol + "\n")
                     ctx.stage = 3
                 else:
                     errors.append("Expecting object name after ',' but instead found '" + symbol + "'.")
@@ -242,7 +243,7 @@ class Compiler(object):
                     prefix = "object" if self.context_stack[-2].typ == OBJ_DEC else "room"
                     import_block = parse_properties(self.datablock, prefix)
                     if import_block != None:
-                        output(import_block, True)
+                        returned_output = output(returned_output, import_block, True)
                     else:
                         errors.append("Syntax error while parsing properties.")
                     self.context_stack.pop()
@@ -260,11 +261,11 @@ class Compiler(object):
             # Add data to block
             if ctx.stage == 1:
                 if symbol == '}' and self.indent_level == 0:
-                    output(self.datablock, True)
+                    returned_output = output(returned_output, self.datablock, True)
 
                 else:
                     if symbol == '{': self.indent_level += 1
-                    elif symbol == '}' self.indent_level -= 1
+                    elif symbol == '}': self.indent_level -= 1
                     self.datablock_add(symbol)
             
         # Parse event symbols
@@ -278,53 +279,55 @@ class Compiler(object):
         # Prefix with initial if first time outputting
         if not self.has_out:
             returned_output = "\n@gml\n" + returned_output
+            self.has_out = True
 
         return (returned_output, warnings, errors)
 
     # Get lingering errors, warnings, compilation blocks
-    def feed_final():
+    def feed_final(self):
 
         # TODO
-        pass
+        # CHECK INDENDATION LEVEL AND CONTEXT
+        return ("", [], [])
 
-    # Checks valid GML variable name errors
-    def valid_varname(name):
-        valid = True
-        if (not name[0].isalpha()) or name[0] != '_': valid = False
-        for char in name[1:]:
-            if (not char.isalnum()) or char != '_': valid = False
-        return valid
+# Checks valid GML variable name errors
+def valid_varname(name):
+    valid = True
+    if (not name[0].isalpha()) and name[0] != '_': valid = False
+    for char in name[1:]:
+        if (not char.isalnum()) and char != '_': valid = False
+    return valid
 
-    def validate_varname(name, ctx):
+def validate_varname(name, ctx):
 
-        if not valid_varname(name):
-            erstr = "Invalid resource name in " + ctx.label() + "."
-            erstr += "Name '" + name + "' is not a valid GML name."
-            return [erstr]
-        return []
+    if not valid_varname(name):
+        erstr = "Invalid resource name in " + ctx.label() + "."
+        erstr += "Name '" + name + "' is not a valid GML name."
+        return [erstr]
+    return []
 
-    # Checks that the symbol matches one of the expectations in the provided list
-    def validate_symbol(symbol, ctx, expectations):
-        if symbol not in expectations:
-            erstr = "Unexpected symbol '" + symbol + "' in " + ctx.label() + "."
-            erstr += "Expected '" + "' or '".join(expectations) + "'."
-            return [erstr]
-        return []
+# Checks that the symbol matches one of the expectations in the provided list
+def validate_symbol(symbol, ctx, expectations):
+    if symbol not in expectations:
+        erstr = "Unexpected symbol '" + symbol + "' in " + ctx.label() + "."
+        erstr += "Expected '" + "' or '".join(expectations) + "'."
+        return [erstr]
+    return []
 
-    # Parses a property data block into import statements. Prefix is "room" or "object"
-    def parse_properties(datablock, prefix):
+# Parses a property data block into import statements. Prefix is "room" or "object"
+def parse_properties(datablock, prefix):
 
-        evalstr = "{" + datablock + "}"
-        prop_dict = None
-        try:
-            prop_dict = ast.literal_eval(evalstr)
-        except SyntaxError:
-            return None
+    evalstr = "{" + datablock + "}"
+    prop_dict = None
+    try:
+        prop_dict = ast.literal_eval(evalstr)
+    except SyntaxError:
+        return None
 
-        importstr = ""
-        for key, value in prop_dict.iteritems():
-            isstring = isinstance(value, basestring)
-            mod_value = '"' + value + '"' if isstring else value
-            importstr += " " + prefix + "_set_" + key + "(global.__itp_res," + mod_value + ");"
+    importstr = ""
+    for key, value in prop_dict.iteritems():
+        isstring = isinstance(value, basestring)
+        mod_value = '"' + value + '"' if isstring else value
+        importstr += " " + prefix + "_set_" + key + "(global.__itp_res," + mod_value + ");"
 
-        return importstr
+    return importstr
