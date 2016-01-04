@@ -56,6 +56,8 @@ class Compiler(object):
     def __init__(self):
         super(Compiler, self).__init__()
 
+        self.has_out = False
+
         # The stack of contexts the the cursor has moved into
         self.context_stack = []
 
@@ -272,6 +274,10 @@ class Compiler(object):
         else:
             raise NotImplementedError("Not all context types implemented in compiler")
             
+
+        # Prefix with initial if first time outputting
+        if not self.has_out:
+            returned_output = "\n@gml\n" + returned_output
 
         return (returned_output, warnings, errors)
 

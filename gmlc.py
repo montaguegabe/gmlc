@@ -40,7 +40,7 @@ def main():
 
     # Create executable by copying
     outpath = args.output + '.exe' if args.output[-4:] != ".exe" else args.output
-    shutil.copy('run.exe', outpath)
+    shutil.copy('run2.exe', outpath)
 
     compiler = Compiler()
     alerts = []
