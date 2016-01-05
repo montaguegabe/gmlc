@@ -1,4 +1,4 @@
-import ast
+import demjson
 
 CHAR_SYMBOLS = frozenset([
     ':',
@@ -244,12 +244,10 @@ class Compiler(object):
                 if symbol == '}':
 
                     # Output parsed data
-                    prefix = "object" if self.context_stack[-2].typ == OBJ_DEC else "room"
-                    import_block = parse_properties(self.datablock, prefix) + "\n"
+                    prefix = "object" if self.context_stack[-2].typ == CtxType.OBJ_DEC else "room"
+                    import_block = parse_properties(self.datablock, prefix, errors)
                     if import_block != None:
                         returned_output = output(returned_output, import_block, True)
-                    else:
-                        errors.append("Syntax error while parsing properties.")
                     self.context_stack.pop()
                 else:
                     self.datablock_add(symbol)
@@ -325,19 +323,29 @@ def validate_symbol(symbol, ctx, expectations):
     return []
 
 # Parses a property data block into import statements. Prefix is "room" or "object"
-def parse_properties(datablock, prefix):
+def parse_properties(datablock, prefix, errors):
 
     evalstr = "{" + datablock + "}"
     prop_dict = None
     try:
-        prop_dict = ast.literal_eval(evalstr)
-    except SyntaxError:
+        prop_dict = demjson.decode(evalstr)
+    except demjson.JSONDecodeError as err:
+        errors.append("Error while parsing " + prefix + " properties: " + str(err) + ".")
         return None
 
     importstr = ""
     for key, value in prop_dict.iteritems():
-        isstring = isinstance(value, basestring)
-        mod_value = '"' + value + '"' if isstring else value
-        importstr += " " + prefix + "_set_" + key + "(global.__itp_res," + mod_value + ");"
+        mod_value = None
+        if isinstance(value, basestring):
+            mod_value = '"' + value + '"'
+        elif isinstance(value, bool):
+            mod_value = "true" if value else "false"
+        elif isinstance(value, (int, long, float)):
+            mod_value = str(value)
+        else:
+            errors.append("Unrecognized value type set for property '" + key + "' of " + prefix + ". Only number, boolean, and string literals are permitted.")
+            return None
+        
+        importstr += prefix + "_set_" + key + "(global.__itp_res," + mod_value + ");\n"
 
     return importstr

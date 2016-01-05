@@ -26,9 +26,9 @@ def main():
 
     # Parse input
     parser = argparse.ArgumentParser()
-    parser.add_argument('files', nargs='+', help='File/s to compile. Globs allowed.')
-    parser.add_argument('-o', '--output', type=str, help='Output file path, not including extension.', default='out')
-    parser.add_argument('-el', '--errorlim', type=int, help='Maximum number of errors before aborting.', default=10)
+    parser.add_argument("files", nargs="+", help="File/s to compile. Globs allowed.")
+    parser.add_argument("-o", "--output", type=str, help="Output file path, not including extension.", default="out")
+    parser.add_argument("-el", "--errorlim", type=int, help="Maximum number of errors before aborting.", default=10)
     args = parser.parse_args()
     
     # Find files to compile
@@ -38,15 +38,15 @@ def main():
         compile_files.extend(matches)
 
     # Create executable by copying
-    outpath = args.output + '.exe' if args.output[-4:] != ".exe" else args.output
-    shutil.copy('run2.exe', outpath)
+    outpath = args.output + ".exe" if args.output[-4:] != ".exe" else args.output
+    shutil.copy("run2.exe", outpath)
 
     compiler = Compiler()
     alerts = []
     error_num = 0
 
     # Compile files
-    with open(outpath, 'a') as f_out:
+    with open(outpath, "a") as f_out:
 
         # Helper to process feed result
         def process_feed_results(results, alerts):
@@ -62,7 +62,7 @@ def main():
             return error_num + len(err)
 
         for source in compile_files:
-            with open(source,'r') as f_in:
+            with open(source,"r") as f_in:
                 line = 1
                 for linestr in f_in:
                     
@@ -113,5 +113,5 @@ def print_alert(alert):
     # Print string
     print string
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

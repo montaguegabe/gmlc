@@ -10,15 +10,14 @@ object susy {
 }
 
 object greg {
-    
+    properties {
+        depth: 2
+    }
 }
 
 room main_room {
     import {
         show_message("MAIN ROOM IMPORT EVENT 1");
-    }
-    import {
-        show_message("MAIN ROOM IMPORT EVENT 2");
     }
     bob, susy, greg
 }
