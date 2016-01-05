@@ -64,9 +64,10 @@ def main():
         for source in compile_files:
             with open(source,"r") as f_in:
                 line = 1
+                ml_comment = False
                 for linestr in f_in:
-                    
-                    symbols = line_to_symbols(linestr, CHAR_SYMBOLS)
+
+                    symbols, ml_comment = line_to_symbols(linestr, CHAR_SYMBOLS, ml_comment)
                     for symbol, idx in symbols:
 
                         col = idx + 1

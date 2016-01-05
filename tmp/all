@@ -36,7 +36,7 @@ bob
 susy
 greg
 @import_evt
-show_message("MAIN ROOM IMPORT EVENT");
+show_message("MAIN /*ROOM*/ IMPORT// EVENT");
 
 @rm_declare next_room
 bob
