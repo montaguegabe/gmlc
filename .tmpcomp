@@ -1,0 +1,24 @@
+
+@gml
+@obj_declare bob
+@obj_declare susy
+@import_evt
+with(global.__bob){instance_destroy();}
+@endimport
+@obj_declare greg
+@import_evt
+object_set_parent(global.__itp_res,susy);
+object_set_depth(global.__itp_res,2);
+@endimport
+@obj_evt 9 38
+show_message("Greg press up!");
+@rm_declare main_room
+@import_evt
+show_message("MAIN /*ROOM*/ IMPORT// EVENT");
+@endimport
+bob
+susy
+greg
+@rm_declare next_room
+bob
+@end

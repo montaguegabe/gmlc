@@ -154,7 +154,7 @@ class Compiler(object):
                 errors.extend(validate_varname(symbol, ctx))
                 if symbol not in self.obj_names:
                     errors.append("No declared object matches name '" + symbol + "'.")
-                returned_output = output(returned_output, "object_set_parent(global.__itp_res,global.__" + symbol + ");\n", True)
+                returned_output = output(returned_output, "object_set_parent(global.__itp_res," + symbol + ");\n", True)
                 ctx.advance()
 
             elif ctx.stage == 3:
@@ -365,6 +365,10 @@ class Compiler(object):
         if self.context_stack:
             errors.append("Source file ended in middle of " + self.context_stack[-1].label() + ".")
         return ("@end\n", warnings, errors)
+
+    # Gets resource names
+    def get_resource_names(self):
+        return self.obj_names.union(self.rm_names)
 
 # Checks valid GML variable name errors
 def valid_varname(name):

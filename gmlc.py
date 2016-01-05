@@ -6,6 +6,7 @@ import glob
 import os
 import shutil
 from gmlc_compiler import Compiler, CHAR_SYMBOLS
+from gmlc_sbltranslator import SblTranslator
 from gmlc_utils import *
 
 class BColors:
@@ -37,16 +38,15 @@ def main():
         matches = glob.glob(glob_path)
         compile_files.extend(matches)
 
-    # Create executable by copying
-    outpath = args.output + ".exe" if args.output[-4:] != ".exe" else args.output
-    shutil.copy("run.exe", outpath)
+    # Temporary file for compiling
+    tmppath = ".tmpcomp"
 
     compiler = Compiler()
     alerts = []
     error_num = 0
 
     # Compile files
-    with open(outpath, "a") as f_out:
+    with open(tmppath, "w") as f_out:
 
         # Helper to process feed result
         def process_feed_results(results, alerts):
@@ -90,13 +90,28 @@ def main():
     # Notify the user of results
     map(lambda alert: print_alert(alert), alerts)
 
-    if error_num == 0:
-        print "Compilation passed. Output file:", outpath, "generated."
-    else:
-        # Delete output file
-        os.remove(outpath)
+    if error_num != 0:
 
+        # Delete output file
+        os.remove(tmppath)
+
+        # Alert
         print "Compilation failed due to errors."
+        return 1
+
+    # Create the executable by copying
+    outpath = args.output + ".exe" if args.output[-4:] != ".exe" else args.output
+    shutil.copy("run.exe", outpath)
+
+    # Translate to the executable
+    resource_names = compiler.get_resource_names()
+    translator = SblTranslator(resource_names)
+
+    with open(outpath, "a") as f_out, open(tmppath, "r") as f_in:
+        for compiled_line in f_in:
+            f_out.write(translator.feed(compiled_line))
+
+    print "Compilation passed. Output file:", outpath, "generated."
 
 # Prints an alert
 def print_alert(alert):
