@@ -16,6 +16,10 @@ object greg : susy {
     properties {
         depth: 2
     }
+
+    event keypress(up) {
+        show_message("Greg press up!");
+    }
 }
 
 // The main room of the game

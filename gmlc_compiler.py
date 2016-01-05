@@ -1,4 +1,6 @@
 import demjson
+from gmlc_events import EVENTS, KEYS
+from gmlc_utils import is_number
 
 CHAR_SYMBOLS = frozenset([
     ':',
@@ -65,6 +67,7 @@ class Compiler(object):
 
         # Object names
         self.obj_names = set()
+        self.rm_names = set()
 
         # The running data block
         self.datablock = ""
@@ -181,6 +184,7 @@ class Compiler(object):
             if ctx.stage == 0:
                 errors.extend(validate_varname(symbol, ctx))
                 returned_output = output(returned_output, "@rm_declare " + symbol + "\n")
+                self.rm_names.add(symbol)
                 ctx.advance()
 
             # Curly following room name
@@ -284,7 +288,60 @@ class Compiler(object):
             
         # Parse event symbols
         elif ctx.typ == CtxType.EVENT:
-            raise NotImplementedError()
+            if ctx.stage == 0:
+
+                # Prefix with ev_
+                mod_symbol = symbol if symbol[:3] == "ev_" else "ev_" + symbol
+
+                # Match with event names
+                if mod_symbol not in EVENTS.keys():
+                    errors.append("No valid event matches name: '" + mod_symbol + "'.")
+                else:
+                    returned_output = output(returned_output, "@obj_evt " + str(EVENTS[mod_symbol]))
+                ctx.advance()
+
+            elif ctx.stage == 1:
+                errors.extend(validate_symbol(symbol, ctx, ['(']))
+                ctx.advance()
+
+            elif ctx.stage == 2:
+                if is_number(symbol):
+                    returned_output = output(returned_output, " " + symbol)
+                else:
+                    prefix = symbol[:3]
+                    mod_symbol = symbol if prefix == "mb_" or prefix == "vk_" else "vk_" + symbol
+                    if symbol == ')':
+                        returned_output = output(returned_output, " 1\n")
+                        ctx.stage = 4
+
+                    # Look up in event keys
+                    elif mod_symbol not in KEYS.keys():
+                        errors.append("Unexpected event argument: '" + symbol + "'.")
+                        ctx.advance()
+                    else:
+                        # Output the mapping
+                        returned_output = output(returned_output, " " + str(KEYS[mod_symbol]) + "\n")
+                        ctx.advance()
+
+            elif ctx.stage == 3:
+                errors.extend(validate_symbol(symbol, ctx, [')']))
+                ctx.advance()
+
+            elif ctx.stage == 4:
+                errors.extend(validate_symbol(symbol, ctx, ['{']))
+                self.datablock = ""
+                ctx.advance()
+
+            # Add data to block
+            elif ctx.stage == 5:
+                if symbol == '}' and self.indent_level == 0:
+                    returned_output = output(returned_output, self.datablock + "\n")
+                    self.context_stack.pop()
+
+                else:
+                    if symbol == '{': self.indent_level += 1
+                    elif symbol == '}': self.indent_level -= 1
+                    self.datablock_add(symbol)
 
         else:
             raise NotImplementedError("Not all context types implemented in compiler")
@@ -292,7 +349,7 @@ class Compiler(object):
 
         # Prefix with initial if first time outputting
         if not self.has_out:
-            returned_output = "@gml\n" + returned_output
+            returned_output = "\n@gml\n" + returned_output
             self.has_out = True
 
         return (returned_output, warnings, errors)

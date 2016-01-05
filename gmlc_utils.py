@@ -77,3 +77,11 @@ def line_to_symbols(string, delim_char_set, ml_comment):
 # Flattens a 2D list
 def flatten(list2d):
     return [item for sublist in list2d for item in sublist]
+
+# Checks if a string is a number
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
