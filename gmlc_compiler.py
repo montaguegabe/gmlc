@@ -72,9 +72,20 @@ class Compiler(object):
         # The indendation level of the data block
         self.indent_level = 0
 
+        # Previous datablock symbol added
+        self.prev_datablock_symbol = "{"
+
     # Helper to add to data block
     def datablock_add(self, symbol):
-        self.datablock += symbol + " "
+
+        # Determine whether padding is necessary
+        last_char = self.prev_datablock_symbol[-1]
+        ended_with_name = last_char.isalnum() or last_char == '_'
+        starts_with_name = symbol[0].isalnum() or symbol[0] == '_'
+        if ended_with_name and starts_with_name: self.datablock += " "
+
+        self.datablock += symbol
+        self.prev_datablock_symbol = symbol
 
     def feed(self, symbol):
 
@@ -95,6 +106,7 @@ class Compiler(object):
 
             returned_output += mod_string
             self.last_out_import = is_import
+            self.prev_datablock_symbol = '{'
             return returned_output
 
         # Get context information
@@ -139,7 +151,7 @@ class Compiler(object):
                 errors.extend(validate_varname(symbol, ctx))
                 if symbol not in self.obj_names:
                     errors.append("No declared object matches name '" + symbol + "'.")
-                returned_output = output(returned_output, "object_set_parent(global.__itp_res," + symbol + ");", True)
+                returned_output = output(returned_output, "object_set_parent(global.__itp_res,global.__" + symbol + ");\n", True)
                 ctx.advance()
 
             elif ctx.stage == 3:
@@ -257,7 +269,6 @@ class Compiler(object):
             if ctx.stage == 0:
                 errors.extend(validate_symbol(symbol, ctx, ['{']))
                 self.datablock = ""
-                self.indent_level = 0
                 ctx.advance()
 
             # Add data to block

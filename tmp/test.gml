@@ -9,7 +9,7 @@ object susy {
     }
 }
 
-object greg {
+object greg : susy {
     properties {
         depth: 2
     }
@@ -17,7 +17,7 @@ object greg {
 
 room main_room {
     import {
-        show_message("MAIN ROOM IMPORT EVENT 1");
+        show_message("MAIN ROOM IMPORT EVENT");
     }
     bob, susy, greg
 }
