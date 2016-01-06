@@ -113,6 +113,9 @@ def main():
         for compiled_line in f_in:
             f_out.write(translator.feed(compiled_line))
 
+    # Delete temporary file
+    os.remove(tmppath)
+
     print "Compilation passed. Output file:", outpath, "generated."
 
 # Prints an alert

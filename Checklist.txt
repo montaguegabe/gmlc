@@ -11,7 +11,7 @@ IMPLEMENT:
 [x] Events
 [x] Resource names transform
 [x] this_resource keyword
-[-] Encryption
+[x] Encryption
 [-] Scripts
 [-] Syntax checking for GML
 [-] Preprocessor define’s
