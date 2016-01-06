@@ -40,6 +40,7 @@ def main():
 
     # Temporary file for compiling
     tmppath = ".tmpcomp"
+    exepath = "run.exe"
 
     compiler = Compiler()
     alerts = []
@@ -101,11 +102,12 @@ def main():
 
     # Create the executable by copying
     outpath = args.output + ".exe" if args.output[-4:] != ".exe" else args.output
-    shutil.copy("run.exe", outpath)
+    shutil.copy(exepath, outpath)
 
     # Translate to the executable
     resource_names = compiler.get_resource_names()
-    translator = SblTranslator(resource_names)
+    exe_size = os.path.getsize(exepath)
+    translator = SblTranslator(resource_names, exe_size)
 
     with open(outpath, "a") as f_out, open(tmppath, "r") as f_in:
         for compiled_line in f_in:

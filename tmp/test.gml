@@ -8,6 +8,7 @@ object susy {
         with(global.__bob) {
             instance_destroy();
         }
+        object_set_depth(this_resource, 2);
     }
 }
 

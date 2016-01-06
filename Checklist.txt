@@ -1,0 +1,18 @@
+TEST:
+
+[x] Inheritance
+[x] Name checking
+
+IMPLEMENT:
+
+[x] Comments
+[x] No whitespace trimming in strings
+[x] Booleans in properties
+[x] Events
+[x] Resource names transform
+[x] this_resource keyword
+[-] Encryption
+[-] Scripts
+[-] Syntax checking for GML
+[-] Preprocessor define’s
+[-] Duplicate resource error

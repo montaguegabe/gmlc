@@ -3,7 +3,7 @@
 @obj_declare bob
 @obj_declare susy
 @import_evt
-with(global.__bob){instance_destroy();}
+with(global.__bob){instance_destroy();}object_set_depth(this_resource,2)
 @endimport
 @obj_declare greg
 @import_evt

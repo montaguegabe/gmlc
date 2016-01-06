@@ -85,3 +85,10 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
+# Cuts out a substring in a string at given index and replaces it
+def replace_substr(string, index, substr, new_substr):
+    precurs = string[:index]
+    rest = string[index:]
+    rest_new = rest.replace(substr, new_substr, 1)
+    return precurs + rest_new
