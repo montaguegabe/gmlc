@@ -4,7 +4,6 @@ from gmlc_utils import line_to_symbols, replace_substr
 pword = "kyqE?EcR:Q<7n~+U"
 pword_len = len(pword)
 pword_bytes = map(lambda char: ord(char), pword)
-print pword_bytes
 
 class SblTranslator(object):
     def __init__(self, resnames, file_size):
@@ -12,7 +11,6 @@ class SblTranslator(object):
         self.resnames = resnames
         self.directive = None
         self.i = file_size
-        print file_size
         self.j = self.i % pword_len
 
     # Input a buffer to translate, encrypt
@@ -59,9 +57,6 @@ class SblTranslator(object):
 
             byte = ord(char)
             mod_bfr += chr((byte + pword_bytes[self.j]) % 256)
-            #mod_bfr += chr((byte + 1) % 256)
-            if byte > 255: print "AHHHH"
-            #mod_bfr += chr(byte + 1)
 
             self.i += 1
             self.j = self.i % pword_len
