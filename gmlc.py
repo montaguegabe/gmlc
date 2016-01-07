@@ -106,8 +106,9 @@ def main():
 
     # Translate to the executable
     resource_names = compiler.get_resource_names()
+    script_names = compiler.get_script_names()
     exe_size = os.path.getsize(exepath)
-    translator = SblTranslator(resource_names, exe_size)
+    translator = SblTranslator(resource_names, script_names, exe_size)
 
     with open(outpath, "a") as f_out, open(tmppath, "r") as f_in:
         for compiled_line in f_in:

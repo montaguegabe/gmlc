@@ -8,7 +8,21 @@ CHAR_SYMBOLS = frozenset([
     '}',
     '(',
     ')',
-    ','
+    ',',
+    ';'
+    """'=',
+    '+',
+    '-',
+    '*',
+    '/',
+    '&',
+    '|',
+    '^',
+    '<',
+    '>',
+    '!',
+    '~',
+    '.'"""
 ])
 
 KEYWORDS = frozenset([
@@ -28,6 +42,7 @@ class CtxType:
     PROP = 3
     IMPORT = 4
     EVENT = 5
+    SCR_DEC = 6
 
 class Ctx(object):
     def __init__(self, typ, stage=0):
@@ -49,6 +64,8 @@ class Ctx(object):
             return "import event block"
         elif self.typ == CtxType.EVENT:
             return "event declaration"
+        elif self.type == CtxType.SCR_DEC:
+            return "script declaration"
         return ""
 
 # The compiler is fed symbols and transpiles
@@ -65,30 +82,35 @@ class Compiler(object):
         # Whether the last output was import block
         self.last_out_import = False
 
-        # Object names
+        # Resource names
         self.obj_names = set()
         self.rm_names = set()
+        self.scr_names = set()
 
-        # The running data block
-        self.datablock = ""
+        # Script argument list
+        self.scr_args_current = None
 
-        # The indendation level of the data block
+        # The running code block
+        self.codeblock = ""
+
+        # The indendation level of the code block
         self.indent_level = 0
 
-        # Previous datablock symbol added
-        self.prev_datablock_symbol = "{"
+        # Previous code block symbol added
+        self.prev_codeblock_symbol = " "
 
     # Helper to add to data block
-    def datablock_add(self, symbol):
+    def codeblock_add(self, symbol):
 
         # Determine whether padding is necessary
-        last_char = self.prev_datablock_symbol[-1]
+        last_char = self.prev_codeblock_symbol[-1]
         ended_with_name = last_char.isalnum() or last_char == '_'
         starts_with_name = symbol[0].isalnum() or symbol[0] == '_'
-        if ended_with_name and starts_with_name: self.datablock += " "
+        #if last_char == ';' or last_char == '}' or last_char == '{': self.codeblock += "\n"
+        if ended_with_name and starts_with_name: self.codeblock += " "
 
-        self.datablock += symbol
-        self.prev_datablock_symbol = symbol
+        self.codeblock += symbol
+        self.prev_codeblock_symbol = symbol
 
     def feed(self, symbol):
 
@@ -109,7 +131,7 @@ class Compiler(object):
 
             returned_output += mod_string
             self.last_out_import = is_import
-            self.prev_datablock_symbol = '{'
+            self.prev_codeblock_symbol = '{'
             return returned_output
 
         # Get context information
@@ -123,6 +145,8 @@ class Compiler(object):
                 self.context_stack.append(Ctx(CtxType.OBJ_DEC))
             elif symbol == 'room':
                 self.context_stack.append(Ctx(CtxType.RM_DEC))
+            elif symbol == 'script':
+                self.context_stack.append(Ctx(CtxType.SCR_DEC))
 
             # Error cases
             else:
@@ -252,7 +276,7 @@ class Compiler(object):
         elif ctx.typ == CtxType.PROP:
             if ctx.stage == 0:
                 errors.extend(validate_symbol(symbol, ctx, ['{']))
-                self.datablock = ""
+                self.codeblock = ""
                 ctx.advance()
 
             # Add data to block
@@ -261,30 +285,30 @@ class Compiler(object):
 
                     # Output parsed data
                     prefix = "object" if self.context_stack[-2].typ == CtxType.OBJ_DEC else "room"
-                    import_block = parse_properties(self.datablock, prefix, errors)
+                    import_block = parse_properties(self.codeblock, prefix, errors)
                     if import_block != None:
                         returned_output = output(returned_output, import_block, True)
                     self.context_stack.pop()
                 else:
-                    self.datablock_add(symbol)
+                    self.codeblock_add(symbol)
             
         # Parse import symbols
         elif ctx.typ == CtxType.IMPORT:
             if ctx.stage == 0:
                 errors.extend(validate_symbol(symbol, ctx, ['{']))
-                self.datablock = ""
+                self.codeblock = ""
                 ctx.advance()
 
             # Add data to block
             elif ctx.stage == 1:
                 if symbol == '}' and self.indent_level == 0:
-                    returned_output = output(returned_output, self.datablock + "\n", True)
+                    returned_output = output(returned_output, self.codeblock + "\n", True)
                     self.context_stack.pop()
 
                 else:
                     if symbol == '{': self.indent_level += 1
                     elif symbol == '}': self.indent_level -= 1
-                    self.datablock_add(symbol)
+                    self.codeblock_add(symbol)
             
         # Parse event symbols
         elif ctx.typ == CtxType.EVENT:
@@ -329,19 +353,82 @@ class Compiler(object):
 
             elif ctx.stage == 4:
                 errors.extend(validate_symbol(symbol, ctx, ['{']))
-                self.datablock = ""
+                self.codeblock = ""
                 ctx.advance()
 
             # Add data to block
             elif ctx.stage == 5:
                 if symbol == '}' and self.indent_level == 0:
-                    returned_output = output(returned_output, self.datablock + "\n")
+                    returned_output = output(returned_output, self.codeblock + "\n")
                     self.context_stack.pop()
 
                 else:
                     if symbol == '{': self.indent_level += 1
                     elif symbol == '}': self.indent_level -= 1
-                    self.datablock_add(symbol)
+                    self.codeblock_add(symbol)
+
+        # Parse script declaration symbols
+        elif ctx.typ == CtxType.SCR_DEC:
+
+            # Name of script
+            if ctx.stage == 0:
+                errors.extend(validate_varname(symbol, ctx))
+                returned_output = output(returned_output, "@scr_declare " + symbol + "\n")
+                self.scr_names.add(symbol)
+                self.scr_args_current = []
+                ctx.advance()
+
+            # Opening parenthesis following script name
+            elif ctx.stage == 1:
+                errors.extend(validate_symbol(symbol, ctx, ['(']))
+                ctx.advance()
+
+            # Argument name or closing paren
+            elif ctx.stage == 2:
+
+                # Check if end of arguments
+                if symbol == ")":
+                    ctx.stage = 5
+                else:
+                    # Verify name
+                    errors.extend(validate_varname(symbol, ctx))
+                    self.scr_args_current.append(symbol)
+                    ctx.advance()
+
+            # Comma or end paren
+            elif ctx.stage == 3:
+                errors.extend(validate_symbol(symbol, ctx, [')', ',']))
+                if symbol == ")":
+                    ctx.stage = 5
+                elif symbol == ",":
+                    ctx.advance()
+
+            # Argument name
+            elif ctx.stage == 4:
+                errors.extend(validate_varname(symbol, ctx))
+                self.scr_args_current.append(symbol)
+                ctx.stage = 3
+
+            # Open curly
+            elif ctx.stage == 5:
+                errors.extend(validate_symbol(symbol, ctx, ['{']))
+                self.codeblock = ""
+                ctx.advance()
+
+            # Actual code symbols
+            elif ctx.stage == 6:
+                if symbol == '}' and self.indent_level == 0:
+                    returned_output = output(returned_output, self.codeblock + "\n")
+                    self.context_stack.pop()
+
+                else:
+                    if symbol == '{': self.indent_level += 1
+                    elif symbol == '}': self.indent_level -= 1
+                    elif symbol in self.scr_args_current:
+                        argnum = self.scr_args_current.index(symbol)
+                        self.codeblock_add("argument" + str(argnum))
+                    else:
+                        self.codeblock_add(symbol)
 
         else:
             raise NotImplementedError("Not all context types implemented in compiler")
@@ -366,9 +453,12 @@ class Compiler(object):
             errors.append("Source file ended in middle of " + self.context_stack[-1].label() + ".")
         return ("@end\n", warnings, errors)
 
-    # Gets resource names
+    # Gets resource names (scripts are not counted)
     def get_resource_names(self):
         return self.obj_names.union(self.rm_names)
+
+    def get_script_names(self):
+        return self.scr_names
 
 # Checks valid GML variable name errors
 def valid_varname(name):
@@ -395,9 +485,9 @@ def validate_symbol(symbol, ctx, expectations):
     return []
 
 # Parses a property data block into import statements. Prefix is "room" or "object"
-def parse_properties(datablock, prefix, errors):
+def parse_properties(codeblock, prefix, errors):
 
-    evalstr = "{" + datablock + "}"
+    evalstr = "{" + codeblock + "}"
     prop_dict = None
     try:
         prop_dict = demjson.decode(evalstr)
