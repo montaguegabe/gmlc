@@ -42,7 +42,7 @@ def line_to_symbols(string, delim_char_set, ml_comment):
 
         # Explode if not in comments or quotes
         should_explode = in_quotes == 0 and not in_comment and not in_linecomment
-        if (char == ' ' or char == '\n') and should_explode:
+        if (char == ' ' or char == '\n' or char == '\r') and should_explode:
             if token: output.append((token, token_idx))
             token = ""
 

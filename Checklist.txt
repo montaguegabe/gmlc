@@ -12,7 +12,8 @@ IMPLEMENT:
 [x] Resource names transform
 [x] this_resource keyword
 [x] Encryption
-[-] Scripts
+[x] Scripts
+[x] var x = blank
 [-] Syntax checking for GML
 [-] Preprocessor define’s
 [-] Duplicate resource error

@@ -1,0 +1,288 @@
+
+@gml
+@obj_declare bob
+@obj_declare susy
+@import_evt
+with(global.__bob){
+instance_destroy();
+}
+object_set_depth(this_resource,2);
+@endimport
+@obj_declare greg
+@import_evt
+object_set_parent(global.__itp_res,susy);
+object_set_depth(global.__itp_res,2);
+@endimport
+@obj_evt 9 38
+var text;text=greeting("Gabe",true);
+show_message(text);
+@obj_evt 9 40
+var d;d=Dist(0,0,1,1);
+show_message(string(d));
+@scr_declare greeting
+var punc;punc=".";
+if(argument1)punc="!";
+return"Hello "+argument0+punc;
+@rm_declare main_room
+@import_evt
+show_message("MAIN /*ROOM*/ IMPORT// EVENT");
+@endimport
+bob
+susy
+greg
+@rm_declare next_room
+bob
+@scr_declare Step
+if(u3d_type==1)if(textureprevious!=texture||xprevious2!=x||yprevious2!=y||zprevious!=z||rotxprevious!=rotx||rotyprevious!=roty||rotzprevious!=rotz||scalxprevious!=scalx||scalyprevious!=scaly||scalzprevious!=scalz)external_call(global.u3d_model_step,u3d_index,x,y,z,rotx,roty,rotz,scalx,scaly,scalz,texture);
+textureprevious=texture;
+xprevious2=x;
+yprevious2=y;
+zprevious=z;
+rotxprevious=rotx;
+rotyprevious=roty;
+rotzprevious=rotz;
+scalxprevious=scalx;
+scalyprevious=scaly;
+scalzprevious=scalz;
+if(frameprevious!=frame||first_frameprevious!=first_frame||last_frameprevious!=last_frame)external_call(global.u3d_model_set_frame,u3d_index,frame,first_frame,last_frame);
+frameprevious=frame;
+first_frameprevious=first_frame;
+last_frameprevious=last_frame;
+else if(u3d_type>=2&&u3d_type<=4)if(rprevious!=r||gprevious!=g||bprevious!=b||spec_rprevious!=spec_r||spec_gprevious!=spec_g||spec_bprevious!=spec_b||xprevious2!=x||yprevious2!=y||zprevious!=z||rotxprevious!=rotx||rotyprevious!=roty||rangeprevious!=range||degprevious!=deg)external_call(global.u3d_transmit_doubles,spec_r,spec_g,spec_b,0,0,0,0,0,0,0,0);
+external_call(global.u3d_light_step,u3d_index,r,g,b,x,y,z,rotx,roty,range,deg);
+rprevious=r;
+gprevious=g;
+bprevious=b;
+xprevious2=x;
+yprevious2=y;
+zprevious=z;
+rotxprevious=rotx;
+rotyprevious=roty;
+rangeprevious=range;
+degprevious=deg;
+else if(u3d_type>=7)if(textureprevious!=texture||xprevious2!=x||yprevious2!=y||zprevious!=z||rotxprevious!=rotx||rotyprevious!=roty||rotzprevious!=rotz||scalxprevious!=scalx||scalyprevious!=scaly||scalzprevious!=scalz)external_call(global.u3d_transform_primitive,u3d_index,texture,x,y,z,rotx,roty,rotz,scalx,scaly,scalz);
+textureprevious=texture;
+xprevious2=x;
+yprevious2=y;
+zprevious=z;
+rotxprevious=rotx;
+rotyprevious=roty;
+rotzprevious=rotz;
+scalxprevious=scalx;
+scalyprevious=scaly;
+scalzprevious=scalz;
+@scr_declare Destroy
+if(u3d_type==1)external_call(global.u3d_destroy_model,u3d_index);
+if(u3d_type>=2&&u3d_type<=4)external_call(global.u3d_destroy_light_source,u3d_index);
+if(u3d_type==5)external_call(global.u3d_destroy_terrain,u3d_index);
+if(u3d_type==6)external_call(global.u3d_destroy_particle_system,u3d_index);
+if(u3d_type>=7&&u3d_type<=13)external_call(global.u3d_destroy_primitive,u3d_index);
+if(u3d_type==14)external_call(global.u3d_destroy_post_screen_shader,u3d_index);
+if(u3d_type==15)external_call(global.u3d_destroy_camera,number);
+u3d_index=0;
+u3d_type=0;
+@scr_declare LoadTexture
+return external_call(global.u3d_load_texture,argument1,argument0,argument2,argument3);
+@scr_declare SetFog
+Init();
+return external_call(global.u3d_set_fog,argument0,argument1,argument2,argument3,argument4);
+@scr_declare DisableFog
+return external_call(global.u3d_set_fog,0,0,0,0,0);
+@scr_declare SetAmbient
+return external_call(global.u3d_set_ambient_light,argument0,argument1,argument2,-1);
+@scr_declare LoadBackground
+Init();
+return external_call(global.u3d_load_background,argument0);
+@scr_declare UnloadBackground
+Init();
+return external_call(global.u3d_load_background,"");
+@scr_declare CreateWall
+Init();
+InitializePrimitiveVariables();
+InitializeVariable("x2",0);
+InitializeVariable("y2",0);
+InitializeVariable("height",0);
+u3d_index=external_call(global.u3d_create_wall,x2,y2,height,texture,texx1,texy1,texx2,texy2,partsx,partsy);
+if(u3d_index)u3d_type=7;
+return u3d_index!=0;
+@scr_declare CreateFloor
+Init();
+InitializePrimitiveVariables();
+InitializeVariable("width",0);
+InitializeVariable("height",0);
+u3d_index=external_call(global.u3d_create_floor,width,height,texture,texx1,texy1,texx2,texy2,partsx,partsy);
+if(u3d_index)u3d_type=8;
+return u3d_index!=0;
+@scr_declare CreateCube
+Init();
+InitializePrimitiveVariables();
+InitializeVariable("width",0);
+InitializeVariable("height",0);
+InitializeVariable("depth2",0);
+InitializeVariable("texz1",0);
+InitializeVariable("texz2",1);
+InitializeVariable("partsz",1);
+InitializeVariable("originx",0);
+InitializeVariable("originy",0);
+InitializeVariable("originz",0);
+InitializeVariable("subdivide_texture",false);
+external_call(global.u3d_transmit_doubles,partsx,partsy,partsz,originx,originy,originz,0,0,0,0,0);
+u3d_index=external_call(global.u3d_create_cube,width,height,depth2,texture,texx1,texy1,texz1,texx2,texy2,texz2,subdivide_texture);
+if(u3d_index)u3d_type=9;
+return u3d_index!=0;
+@scr_declare Create2D
+Init();
+InitializePrimitiveVariables();
+InitializeVariable("originx",0);
+InitializeVariable("originy",0);
+InitializeVariable("width",0);
+InitializeVariable("height",0);
+u3d_index=external_call(global.u3d_create_billboard,width,height,originx,1-originy,partsx,partsy,texture,texx1,texy1,texx2,texy2);
+if(u3d_index)u3d_type=11;
+return u3d_index!=0;
+@scr_declare BeginPolygon
+Init();
+return external_call(global.u3d_begin_polygon,argument0);
+@scr_declare AddVertex
+return external_call(global.u3d_add_vertex,argument0,argument1,argument2,argument3,argument4);
+@scr_declare CreatePolygon
+InitializePrimitiveVariables();
+u3d_index=external_call(global.u3d_create_polygon);
+if(u3d_index)u3d_type=10;
+return u3d_index!=0;
+@scr_declare LightDirectional
+Init();
+InitializeLightVariables();
+u3d_index=external_call(global.u3d_create_directional_light,r,g,b,spec_r,spec_g,spec_b,rotx,roty);
+if(u3d_index)u3d_type=2;
+return u3d_index!=0;
+@scr_declare LightPoint
+Init();
+InitializeLightVariables();
+u3d_index=external_call(global.u3d_create_point_light,r,g,b,spec_r,spec_g,spec_b,x,y,z,range);
+if(u3d_index)u3d_type=3;
+return u3d_index!=0;
+@scr_declare LightSpot
+Init();
+InitializeLightVariables();
+external_call(global.u3d_transmit_doubles,spec_r,spec_g,spec_b,0,0,0,0,0,0,0,0);
+u3d_index=external_call(global.u3d_create_spot_light,r,g,b,x,y,z,rotx,roty,range,deg);
+if(u3d_index)u3d_type=4;
+return u3d_index!=0;
+@scr_declare LoadMesh
+Init();
+InitializeVariable("xprevious2",-123);
+InitializeVariable("yprevious2",-123);
+InitializeVariable("z",0);
+InitializeVariable("zprevious",-123);
+InitializeVariable("rotx",0);
+InitializeVariable("rotxprevious",-123);
+InitializeVariable("roty",0);
+InitializeVariable("rotyprevious",-123);
+InitializeVariable("rotz",0);
+InitializeVariable("rotzprevious",-123);
+InitializeVariable("scalx",1);
+InitializeVariable("scalxprevious",-123);
+InitializeVariable("scaly",1);
+InitializeVariable("scalyprevious",-123);
+InitializeVariable("scalz",1);
+InitializeVariable("scalzprevious",-123);
+InitializeVariable("texture",0);
+InitializeVariable("textureprevious",-123);
+InitializeVariable("frame",-1);
+InitializeVariable("frameprevious",-123);
+InitializeVariable("first_frame",0);
+InitializeVariable("first_frameprevious",-123);
+InitializeVariable("last_frame",0);
+InitializeVariable("last_frameprevious",-123);
+InitializeVariable("password","");
+if(scalx==0&&scaly==0&&scalz==0)scalx=1;
+scaly=1;
+scalz=1;
+u3d_index=external_call(global.u3d_load_mesh,file,password);
+if(u3d_index)u3d_type=1;
+else u3d_type=0;
+return u3d_index!=0;
+@scr_declare SetVertex
+xprevious2+=1;
+return external_call(global.u3d_set_vertex,u3d_index,argument0,argument1,argument2,argument3,argument4,argument5);
+@scr_declare GetVertex
+return external_call(global.u3d_get_vertex,u3d_index,argument0,argument1);
+@scr_declare SetMaterial
+return external_call(global.u3d_set_material,u3d_index,argument0,argument1,argument2,argument3);
+@scr_declare SetMaterialEmissive
+return external_call(global.u3d_set_material_emissive,u3d_index,argument0,argument1,argument2);
+@scr_declare RecreatePrimitive
+if(u3d_type>=7)if(u3d_type==7)Destroy();
+CreateWall();
+if(u3d_type==8)Destroy();
+CreateFloor();
+if(u3d_type==9)Destroy();
+CreateCube();
+if(u3d_type==10)Destroy();
+CreatePolygon();
+if(u3d_type==11)Destroy();
+Create2D();
+external_call(global.u3d_transform_primitive,u3d_index,texture,x,y,z,rotx,roty,rotz,scalx,scaly,scalz);
+@scr_declare DrawTex
+return external_call(global.u3d_draw_texture,argument0,argument1,argument2,argument3,argument4,argument5+255*(argument5==0));
+@scr_declare DrawTexEx
+external_call(global.u3d_transmit_doubles,argument10,argument11,argument12,argument13+255*(argument13==0),0,0,0,0,0,0,0);
+return external_call(global.u3d_draw_texture_ex,argument0,argument1,argument2,argument3,argument4,argument5,argument6,argument7,argument8,argument9,argument14);
+@scr_declare SetFont
+Init();
+if(argument7==0)argument7=255;
+external_call(global.u3d_set_font,argument1,argument0,argument2,argument3);
+external_call(global.u3d_set_font_color,argument1,argument4,argument5,argument6,argument7);
+return true;
+@scr_declare SetFontColor
+return external_call(global.u3d_set_font_color,argument0,argument1,argument2,argument3,argument4);
+@scr_declare DrawText
+external_call(global.u3d_transmit_doubles,argument4,0,0,0,0,0,0,0,0,0,0);
+return external_call(global.u3d_draw_text,argument0,argument1,argument2,argument3);
+@scr_declare Draw3DText
+external_call(global.u3d_transmit_doubles,argument2,argument3,argument4,argument5,argument6,argument7,argument8,argument9,argument10,0,0);
+return external_call(global.u3d_draw_text_3d,argument1,argument0);
+@scr_declare Move
+x+=sin(degtorad(argument1))*cos(degtorad(argument0))*argument2;
+y+=cos(degtorad(argument1))*cos(degtorad(argument0))*argument2;
+z-=sin(degtorad(argument0))*argument2;
+@scr_declare MouseCheckButton
+return keyboard_check_direct(argument0);
+@scr_declare GetMousePos
+global.mouse_x=external_call(global.u3d_get_mouse_position_x);
+global.mouse_y=external_call(global.u3d_get_mouse_position_y);
+return true;
+@scr_declare SetMousePos
+return external_call(global.u3d_set_mouse_position,argument0,argument1);
+@scr_declare TakeScreenshot
+return external_call(global.u3d_take_screenshot,argument0);
+@scr_declare TakeScreenshotEx
+external_call(global.u3d_transmit_doubles,argument2,argument3,argument4,argument5,0,0,0,0,0,0,0);
+return external_call(global.u3d_take_screenshot_ex,argument0);
+@scr_declare CollisionH
+if(other.z<height+z&&other.z+height>z)other.y-=((other.y<y)*2-1)*abs(other.y-other.yprevious);
+@scr_declare CollisionV
+if(other.z<height+z&&other.z+height>z)other.x-=((other.x<x)*2-1)*abs(other.x-other.xprevious);
+@scr_declare CollisionZ
+if(other.z>z+height*(u3d_type==9))other.falling=true;
+else if(other.z+other.height>z+height*(u3d_type==9))other.z=z+height*(u3d_type==9);
+other.falling=false;
+other.falling_speed=0;
+@scr_declare CollisionTerrainModel
+terrain_height=-external_call(global.u3d_get_distance_to_model,u3d_index,other.x,other.y,10000,90,0)+10000;
+if(terrain_height==-90000)other.falling=false;
+other.falling_speed=0;
+return false;
+if((other.z>=terrain_height-other.height/4&&other.z<terrain_height+other.height/4)||(other.zprevious>terrain_height&&other.z<terrain_height))if(terrain_height-other.z>other.height/2)other.x=other.xprevious;
+other.y=other.yprevious;
+other.falling=false;
+other.falling_speed=0;
+other.z=terrain_height;
+if(other.z+other.height<terrain_height||other.z>terrain_height+other.height/4)other.falling=true;
+return true;
+@scr_declare Dist
+var dx;dx=argument0-argument2;
+var dy;dy=argument1-argument3;
+return sqrt(dx*dx+dy*dy);
+@end

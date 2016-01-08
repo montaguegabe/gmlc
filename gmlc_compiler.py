@@ -30,10 +30,11 @@ KEYWORDS = frozenset([
     'event',
     'import',
     'properties',
-    'room'
+    'room',
+    'script'
 ])
 
-SYMBOLS = CHAR_SYMBOLS.union(KEYWORDS)
+KEYWORDS_SE = frozenset(['#define']).union(KEYWORDS)
 
 # A context class represents a general scope of expectation
 class CtxType:
@@ -43,6 +44,7 @@ class CtxType:
     IMPORT = 4
     EVENT = 5
     SCR_DEC = 6
+    SCR_DEC_GM = 7
 
 class Ctx(object):
     def __init__(self, typ, stage=0):
@@ -64,14 +66,16 @@ class Ctx(object):
             return "import event block"
         elif self.typ == CtxType.EVENT:
             return "event declaration"
-        elif self.type == CtxType.SCR_DEC:
+        elif self.typ == CtxType.SCR_DEC:
+            return "script declaration"
+        elif self.typ == CtxType.SCR_DEC_GM:
             return "script declaration"
         return ""
 
 # The compiler is fed symbols and transpiles
 class Compiler(object):
 
-    def __init__(self):
+    def __init__(self, allow_gmldef):
         super(Compiler, self).__init__()
 
         self.has_out = False
@@ -87,6 +91,8 @@ class Compiler(object):
         self.rm_names = set()
         self.scr_names = set()
 
+        self.allow_gmldef = allow_gmldef
+
         # Script argument list
         self.scr_args_current = None
 
@@ -97,20 +103,25 @@ class Compiler(object):
         self.indent_level = 0
 
         # Previous code block symbol added
-        self.prev_codeblock_symbol = " "
+        self.prev_codeblock_symbols = [" "]
 
     # Helper to add to data block
     def codeblock_add(self, symbol):
 
+        # Allow `var name = value`
+        if len(self.prev_codeblock_symbols) >= 2:
+            if symbol == '=' and self.prev_codeblock_symbols[1] == "var":
+                symbol = ";" + self.prev_codeblock_symbols[0] + "="
+
         # Determine whether padding is necessary
-        last_char = self.prev_codeblock_symbol[-1]
+        last_char = self.prev_codeblock_symbols[0][-1]
         ended_with_name = last_char.isalnum() or last_char == '_'
         starts_with_name = symbol[0].isalnum() or symbol[0] == '_'
-        #if last_char == ';' or last_char == '}' or last_char == '{': self.codeblock += "\n"
+        if last_char == ';' or last_char == '}' or last_char == '{': self.codeblock += "\n"
         if ended_with_name and starts_with_name: self.codeblock += " "
 
         self.codeblock += symbol
-        self.prev_codeblock_symbol = symbol
+        self.prev_codeblock_symbols.insert(0, symbol);
 
     def feed(self, symbol):
 
@@ -131,7 +142,7 @@ class Compiler(object):
 
             returned_output += mod_string
             self.last_out_import = is_import
-            self.prev_codeblock_symbol = '{'
+            self.prev_codeblock_symbols = [" "]
             return returned_output
 
         # Get context information
@@ -147,6 +158,8 @@ class Compiler(object):
                 self.context_stack.append(Ctx(CtxType.RM_DEC))
             elif symbol == 'script':
                 self.context_stack.append(Ctx(CtxType.SCR_DEC))
+            elif symbol == '#define' and self.allow_gmldef:
+                self.context_stack.append(Ctx(CtxType.SCR_DEC_GM))
 
             # Error cases
             else:
@@ -198,7 +211,6 @@ class Compiler(object):
                     self.context_stack.append(Ctx(CtxType.IMPORT))
 
             else:
-                print ctx.stage
                 raise NotImplementedError()
 
         # Parse room declaration symbols
@@ -430,6 +442,32 @@ class Compiler(object):
                     else:
                         self.codeblock_add(symbol)
 
+        # Parse GML-style script declaration symbols
+        elif ctx.typ == CtxType.SCR_DEC_GM:
+
+            # Name of script
+            if ctx.stage == 0:
+                errors.extend(validate_varname(symbol, ctx))
+                returned_output = output(returned_output, "@scr_declare " + symbol + "\n")
+                self.scr_names.add(symbol)
+                self.scr_args_current = []
+                self.indent_level = 0
+                self.codeblock = ""
+                ctx.advance()
+
+            # Actual code symbols
+            elif ctx.stage == 1:
+                if symbol in KEYWORDS_SE and self.indent_level == 0:
+                    returned_output = output(returned_output, self.codeblock + "\n")
+                    self.context_stack.pop()
+                    self.feed(symbol) # Feed the symbol again in the new context
+
+                else:
+                    if symbol == '{': self.indent_level += 1
+                    elif symbol == '}': self.indent_level -= 1
+                    else:
+                        self.codeblock_add(symbol)
+
         else:
             raise NotImplementedError("Not all context types implemented in compiler")
             
@@ -446,12 +484,23 @@ class Compiler(object):
 
         errors = []
         warnings = []
+        returned_output = ""
 
         if self.indent_level != 0:
             errors.append("Curly brace mismatch. Expecting '}'.");
         if self.context_stack:
-            errors.append("Source file ended in middle of " + self.context_stack[-1].label() + ".")
-        return ("@end\n", warnings, errors)
+
+            if self.context_stack[-1].typ == CtxType.SCR_DEC_GM:
+                self.last_out_import = False
+                self.prev_codeblock_symbols = [" "]
+                returned_output = self.codeblock + "\n"
+                self.context_stack.pop()
+            else:
+                errors.append("Source file ended in middle of " + self.context_stack[-1].label() + ".")
+
+        returned_output += "@end\n"
+
+        return (returned_output, warnings, errors)
 
     # Gets resource names (scripts are not counted)
     def get_resource_names(self):
@@ -473,6 +522,7 @@ def validate_varname(name, ctx):
     if not valid_varname(name):
         erstr = "Invalid resource name in " + ctx.label() + "."
         erstr += " Name '" + name + "' is not a valid GML name."
+        print map(lambda char: ord(char), name)
         return [erstr]
     return []
 

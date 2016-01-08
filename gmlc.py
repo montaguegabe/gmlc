@@ -29,6 +29,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("files", nargs="+", help="File/s to compile. Globs allowed.")
     parser.add_argument("-o", "--output", type=str, help="Output file path, not including extension.", default="out")
+    parser.add_argument("-se", "--script-export", help="Allow parsing of exported scripts from Game Maker.", action='store_true')
     parser.add_argument("-el", "--errorlim", type=int, help="Maximum number of errors before aborting.", default=10)
     args = parser.parse_args()
     
@@ -42,7 +43,7 @@ def main():
     tmppath = ".tmpcomp"
     exepath = "run.exe"
 
-    compiler = Compiler()
+    compiler = Compiler(args.script_export)
     alerts = []
     error_num = 0
 
@@ -115,7 +116,7 @@ def main():
             f_out.write(translator.feed(compiled_line))
 
     # Delete temporary file
-    os.remove(tmppath)
+    #os.remove(tmppath)
 
     print "Compilation passed. Output file:", outpath, "generated."
 
