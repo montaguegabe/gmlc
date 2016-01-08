@@ -19,20 +19,22 @@ object greg : susy {
     }
 
     event keypress(up) {
-        var text = greeting("Gabe", true);
+        var text = greeting();
         show_message(text);
     }
     event keypress(down) {
-      var d = Dist(0, 0, 1, 1);
+      //var d = Dist(0, 0, 1, 1);
+      var d = 3.14159;
       show_message(string(d));
     }
 }
 
 // A script to greet people
-script greeting(name, excited) {
+script greeting() {
 
     var punc = ".";
-    if (excited) punc = "!";
+    var name = "Gabe";
+    //if (excited) punc = "!";
     return "Hello " + name + punc;
 }
 

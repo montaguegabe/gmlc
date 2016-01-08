@@ -64,6 +64,7 @@ def main():
             return error_num + len(err)
 
         for source in compile_files:
+            print "Compiling", source + "..."
             with open(source,"r") as f_in:
                 line = 1
                 ml_comment = False
@@ -84,6 +85,9 @@ def main():
                     if error_num > args.errorlim: break
 
             if error_num > args.errorlim: break
+
+            # Finalize file
+            #final_results = compiler.feed_final
 
         # Finalize compilation
         final_results = compiler.feed_final()
@@ -116,7 +120,7 @@ def main():
             f_out.write(translator.feed(compiled_line))
 
     # Delete temporary file
-    #os.remove(tmppath)
+    os.remove(tmppath)
 
     print "Compilation passed. Output file:", outpath, "generated."
 

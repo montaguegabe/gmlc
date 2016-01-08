@@ -460,13 +460,13 @@ class Compiler(object):
                 if symbol in KEYWORDS_SE and self.indent_level == 0:
                     returned_output = output(returned_output, self.codeblock + "\n")
                     self.context_stack.pop()
+                    self.indent_level = 0
                     self.feed(symbol) # Feed the symbol again in the new context
 
                 else:
                     if symbol == '{': self.indent_level += 1
                     elif symbol == '}': self.indent_level -= 1
-                    else:
-                        self.codeblock_add(symbol)
+                    self.codeblock_add(symbol)
 
         else:
             raise NotImplementedError("Not all context types implemented in compiler")
@@ -499,7 +499,7 @@ class Compiler(object):
                 errors.append("Source file ended in middle of " + self.context_stack[-1].label() + ".")
 
         returned_output += "@end\n"
-
+        self.context_stack = []
         return (returned_output, warnings, errors)
 
     # Gets resource names (scripts are not counted)

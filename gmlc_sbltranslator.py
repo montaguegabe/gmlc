@@ -13,6 +13,7 @@ class SblTranslator(object):
         self.directive = None
         self.i = file_size
         self.j = self.i % pword_len
+        self.comma_prefix = False
 
         # Remember previous codeblock symbols
         self.prev_codeblock_sym = None
@@ -46,6 +47,9 @@ class SblTranslator(object):
                     should_translate = False
 
             # Translate script executions
+            if self.comma_prefix:
+                if symbol != ")":
+                    symbol = "," + symbol
             if symbol == "(" and self.prev_codeblock_sym != None:
 
                 # Replace script name with string execution
@@ -55,9 +59,10 @@ class SblTranslator(object):
                     if self.prev_codeblock_sym.endswith(scrname):
                         prev_scrname = scrname
                         prev_scrind = len(self.prev_codeblock_sym) - len(scrname) - 1
+                        self.comma_prefix = True
 
                 if prev_scrname:
-                    new_scrname = "execute_string(global.__" + prev_scrname + ","
+                    new_scrname = "execute_string(global.__" + prev_scrname
                     new_prevsym = replace_substr(self.prev_codeblock_sym, prev_scrind, prev_scrname, new_scrname)
                     bfr = replace_substr(bfr, index, symbol, "")
                     bfr = replace_substr(bfr, self.prev_codeblock_ind, self.prev_codeblock_sym, new_prevsym)
@@ -87,6 +92,7 @@ class SblTranslator(object):
 
             byte = ord(char)
             mod_bfr += chr((byte + pword_bytes[self.j]) % 256)
+            #mod_bfr += chr((byte + 0) % 256)
 
             self.i += 1
             self.j = self.i % pword_len
