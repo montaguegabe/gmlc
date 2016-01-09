@@ -1,106 +1,113 @@
 object control {
 
-  event create() {
+    properties {
+        depth: 0,
+        persistent: true
+    }
 
-    // Init MIDI
-    midi_dll_init();
-    midi_init( window_handle( ) );
+    event create() {
 
-    BG_r = 255;
-    BG_g = 255;
-    BG_b = 255;
-    show_cursor = false;
+        // Init MIDI
+        midi_dll_init();
+        midi_init( window_handle( ) );
 
-    Init();
-    GMBULLET_Init( );
+        BG_r = 255;
+        BG_g = 255;
+        BG_b = 255;
+        show_cursor = false;
 
-    global.lmb = 0;
-    global.rmb = 0;
-    global.mmb = 0;
+        show_message("Create event");
 
-    // Create the physics world
-    GMBULLET_CreateBulletWorld( -1000, -1000, -1000, 1000, 1000, 1000, 16 );
-    GMBULLET_SetAngleProperties( true, true );
+        Init();
+        GMBULLET_Init( );
 
-    // 16 Pixels is a meter
-    global.scale = 16;
-    GMBULLET_SetWorldScale( global.scale );
+        global.lmb = 0;
+        global.rmb = 0;
+        global.mmb = 0;
 
-    // Gravity
-    GMBULLET_SetWorldGravity( 0, 0, -9.8 / global.scale );
+        // Create the physics world
+        GMBULLET_CreateBulletWorld( -1000, -1000, -1000, 1000, 1000, 1000, 16 );
+        GMBULLET_SetAngleProperties( true, true );
 
-    // Load textures
-    inst = 11;
+        // 16 Pixels is a meter
+        global.scale = 16;
+        GMBULLET_SetWorldScale( global.scale );
 
-    // Load Shapes
-    global.shape_ground = GMBULLET_CreateBoxShape( 1, 16, 4 );
-    global.shape_sphere = GMBULLET_CreateSphereShape( 4 );
-  }
+        // Gravity
+        GMBULLET_SetWorldGravity( 0, 0, -9.8 / global.scale );
 
-  event destroy() {
-      external_call( global.u3d_cleanup );
-  }
+        // Load textures
+        inst = 11;
 
-  event step() {
-      var num, i;
+        // Load Shapes
+        global.shape_ground = GMBULLET_CreateBoxShape( 1, 16, 4 );
+        global.shape_sphere = GMBULLET_CreateSphereShape( 4 );
+    }
 
-      // Update the physics
-      GMBULLET_StepSimulationTime( 1, 4, 1 / max( fps, 10 ) );
+    event destroy() {
+        external_call( global.u3d_cleanup );
+    }
 
-      // Play collision sounds
-      num = GMBULLET_GetNumOldCollisionPair( );
+    event step_normal() {
+        var num, i;
 
-      for( i = 0; i < num; i += 1 ) {
+        // Update the physics
+        GMBULLET_StepSimulationTime( 1, 4, 1 / max( fps, 10 ) );
 
-          var gmId1;
+        // Play collision sounds
+        num = GMBULLET_GetNumOldCollisionPair( );
 
-          gmId1 = GMBULLET_GetOldCollisionPairBodyID(i, false, 1);
-          gmId2 = GMBULLET_GetOldCollisionPairBodyID(i, true, 1);
+        for( i = 0; i < num; i += 1 ) {
 
-          if (gmId1.object_index == platform) {
+            var gmId1;
+
+            gmId1 = GMBULLET_GetOldCollisionPairBodyID(i, false, 1);
+            gmId2 = GMBULLET_GetOldCollisionPairBodyID(i, true, 1);
+
+            if (gmId1.object_index == platform) {
 
               // Channel, pan, instrument, pitch, volume, duration
               midi_note_play_timed( 0, 128, gmId1.inst, gmId1.pitch, 128, 500 );
               gmId1.scaly *= 1.25;
               gmId1.scalz = 0.25;
-          }
-          if (gmId2.object_index == platform) {
+            }
+            if (gmId2.object_index == platform) {
               midi_note_play_timed( 0, 128, gmId2.inst, gmId2.pitch, 128, 500 );
               gmId2.scaly *= 2.25;
               gmId2.scalz = 0.25;
-          }
-      }
-  }
+            }
+        }
+    }
 
-  event step_begin() {
-      external_call( global.u3d_present );
+    event step_begin() {
+        external_call( global.u3d_present );
 
-      if( MouseCheckButton( mb_left ) ) global.lmb += 1;
-      else global.lmb = 0;
+        if( MouseCheckButton( mb_left ) ) global.lmb += 1;
+        else global.lmb = 0;
 
-      if( MouseCheckButton( mb_right ) ) global.rmb += 1;
-      else global.rmb = 0;
+        if( MouseCheckButton( mb_right ) ) global.rmb += 1;
+        else global.rmb = 0;
 
-      if( MouseCheckButton( mb_middle ) ) global.mmb += 1;
-      else global.mmb = 0;
-  }
+        if( MouseCheckButton( mb_middle ) ) global.mmb += 1;
+        else global.mmb = 0;
+    }
 
 
-  event step_end() {
-      external_call( global.u3d_transmit_controller_information, BG_r, BG_g, BG_b, show_cursor );
-      external_call( global.u3d_render );
-  }
+    event step_end() {
+        external_call( global.u3d_transmit_controller_information, BG_r, BG_g, BG_b, show_cursor );
+        external_call( global.u3d_render );
+    }
 
-  event game_end() {
-      GMBULLET_DeleteAllShapes( );
-      GMBULLET_DestroyBulletWorld( );
-      external_call( global.u3d_cleanup );
+    /*event game_end() {
+        GMBULLET_DeleteAllShapes( );
+        GMBULLET_DestroyBulletWorld( );
+        external_call( global.u3d_cleanup );
 
-      midi_exit( );
-      midi_dll_free( );
-  }
+        midi_exit( );
+        midi_dll_free( );
+    }*/
 
-  event keypress(enter) {
-      inst = round(random(100));
-  }
+    event keypress(enter) {
+        inst = round(random(100));
+    }
 }

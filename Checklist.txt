@@ -10,9 +10,17 @@ IMPLEMENT:
 [x] Scripts
 [x] var x = blank
 [x] Do named arguments the right way
-[-] Runtime errors for no room
-[-] Runtime errors for no resources
+[-] Runtime error for no resources
+[-] Compile error for no room
 [-] Compile error for no files matched
 [-] Syntax checking for GML
 [-] Preprocessor define’s
 [-] Duplicate resource error
+
+
+BUGS:
+[-] Rooms must be done at the end - require
+[-] Events
+[-] Collision events
+  [-] Create resources at start of interpretation
+  [-] Then add events

@@ -2503,6 +2503,7 @@ return external_call(global.u3d_set_mip_map_count,argument0);
 return external_call(global.u3d_set_texture_path,argument0);
 
 #define Init
+show_message("INIT U3D");
 // Init()
 // This function initializes Ultimate 3D. It's called by every U3D script
 // that requires that U3D is initialized.
@@ -2535,6 +2536,7 @@ if(!global.u3d_initialized){
     global.u3d_switch_wire_frame_mode=ExternalDefineDouble("SwitchWireFrameMode",3);
     global.u3d_switch_additive_blending=ExternalDefineDouble("SwitchAdditiveBlending",3);
     global.u3d_update_camera_transformation=ExternalDefineDouble("UpdateCameraTransformation",7);
+    show_message("SET THE BUGGER");
     global.u3d_update_camera_projection=ExternalDefineDouble("UpdateCameraProjection",10);
     global.u3d_destroy_camera=ExternalDefineDouble("DestroyCamera",1);
     global.u3d_render_to_texture=ExternalDefineDouble("RenderToTexture",1);

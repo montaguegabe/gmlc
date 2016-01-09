@@ -1,0 +1,2 @@
+#!/bin/bash
+python gmlc.py simple/main.gml -o simple/output.exe -se

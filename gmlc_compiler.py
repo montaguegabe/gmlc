@@ -1,5 +1,5 @@
 import demjson
-from gmlc_events import EVENTS, KEYS
+from gmlc_events import EVENT_TYPES, EVENT_NUMS, KEYS
 from gmlc_utils import is_number, valid_varname
 
 CHAR_SYMBOLS = frozenset([
@@ -77,6 +77,9 @@ class Compiler(object):
         self.obj_names = set()
         self.rm_names = set()
         self.scr_names = set()
+
+        # The event type
+        self.event_type_name = None
 
         self.allow_gmldef = allow_gmldef
 
@@ -316,11 +319,12 @@ class Compiler(object):
                 # Prefix with ev_
                 mod_symbol = symbol if symbol[:3] == "ev_" else "ev_" + symbol
 
-                # Match with event names
-                if mod_symbol not in EVENTS.keys():
-                    errors.append("No valid event matches name: '" + mod_symbol + "'.")
+                # Match with event type names
+                if mod_symbol not in EVENT_TYPES.keys():
+                    errors.append("No valid event type matches name: '" + mod_symbol + "'.")
                 else:
-                    returned_output = output(returned_output, "@obj_evt " + str(EVENTS[mod_symbol]))
+                    self.event_type_name = mod_symbol
+                    returned_output = output(returned_output, "@obj_evt " + str(EVENT_TYPES[mod_symbol]) + " ")
                 ctx.advance()
 
             elif ctx.stage == 1:
@@ -329,10 +333,55 @@ class Compiler(object):
 
             elif ctx.stage == 2:
                 if is_number(symbol):
-                    returned_output = output(returned_output, " " + symbol)
+                    returned_output = output(returned_output, symbol)
+                    ctx.advance()
                 else:
-                    prefix = symbol[:3]
-                    mod_symbol = symbol if prefix == "mb_" or prefix == "vk_" else "vk_" + symbol
+
+                    # Check no arguments
+                    if symbol == ')':
+                        returned_output = output(returned_output, "0\n")
+                        ctx.stage = 4
+                        if not (self.event_type_name == "ev_create" or self.event_type_name == "ev_destroy" or self.event_type_name == "ev_draw"):
+                            errors.append("Expecting event number argument for event of type " + self.event_type_name)
+
+                    # Check if it is a single char for a keycode
+                    elif self.event_type_name[:6] == "ev_key" and len(symbol) == 3 and symbol[0] == '"' and symbol[2] == '"':
+                        returned_output = output(returned_output, str(ord(symbol[1].upper())) + "\n")
+                        ctx.advance()
+
+                    # Check for event constants
+                    else:
+                        prefix = symbol[:3]
+
+                        if self.event_type_name == "ev_create" or self.event_type_name == "ev_destroy" or self.event_type_name == "ev_draw":
+                            errors.append("Unexpected event number argument provided for event of type " + self.event_type_name)
+                        elif self.event_type_name[:6] == "ev_key":
+                            if prefix == "ev_":
+                                errors.append("Unexpected event number constant beginning with 'ev_' for event type " + self.event_type_name)
+                            elif prefix == "vk_":
+                                returned_output = output(returned_output, str(KEYS[symbol]) + "\n")
+                            else:
+                                mod_symbol = "vk_" + symbol
+                                if mod_symbol not in KEYS.keys():
+                                    errors.append("Unknown key constant " + mod_symbol)
+                                else:
+                                    returned_output = output(returned_output, str(KEYS[mod_symbol]) + "\n")
+                        else:
+                            if prefix == "vk_":
+                                errors.append("Unexpected event number constant beginning with 'vk_' for event type " + self.event_type_name)
+                            elif prefix == "ev_":
+                                returned_output = output(returned_output, str(EVENT_NUMS[symbol]) + "\n")
+                            else:
+                                mod_symbol = "ev_" + symbol
+                                if mod_symbol not in EVENT_NUMS.keys():
+                                    errors.append("Unknown event number constant " + mod_symbol)
+                                else:
+                                    returned_output = output(returned_output, str(EVENT_NUMS[mod_symbol]) + "\n")
+
+                        ctx.advance()
+
+                    """prefix = symbol[:3]
+                    if prefix == "mb_" or prefix == "vk_": mod_symbol = symbol
                     if symbol == ')':
                         returned_output = output(returned_output, " 1\n")
                         ctx.stage = 4
@@ -344,7 +393,7 @@ class Compiler(object):
                     else:
                         # Output the mapping
                         returned_output = output(returned_output, " " + str(KEYS[mod_symbol]) + "\n")
-                        ctx.advance()
+                        ctx.advance()"""
 
             elif ctx.stage == 3:
                 errors.extend(validate_symbol(symbol, ctx, [')']))
