@@ -1,6 +1,6 @@
 import demjson
 from gmlc_events import EVENTS, KEYS
-from gmlc_utils import is_number
+from gmlc_utils import is_number, valid_varname
 
 CHAR_SYMBOLS = frozenset([
     ':',
@@ -10,19 +10,6 @@ CHAR_SYMBOLS = frozenset([
     ')',
     ',',
     ';'
-    """'=',
-    '+',
-    '-',
-    '*',
-    '/',
-    '&',
-    '|',
-    '^',
-    '<',
-    '>',
-    '!',
-    '~',
-    '.'"""
 ])
 
 KEYWORDS = frozenset([
@@ -425,6 +412,11 @@ class Compiler(object):
             elif ctx.stage == 5:
                 errors.extend(validate_symbol(symbol, ctx, ['{']))
                 self.codeblock = ""
+                var_declarations = ""
+                for index, argument in enumerate(self.scr_args_current):
+                    var_declarations += "var " + argument + ";"
+                    var_declarations += argument + "=argument" + str(index) + ";\n"
+                returned_output = output(returned_output, var_declarations)
                 ctx.advance()
 
             # Actual code symbols
@@ -436,9 +428,6 @@ class Compiler(object):
                 else:
                     if symbol == '{': self.indent_level += 1
                     elif symbol == '}': self.indent_level -= 1
-                    elif symbol in self.scr_args_current:
-                        argnum = self.scr_args_current.index(symbol)
-                        self.codeblock_add("argument" + str(argnum))
                     else:
                         self.codeblock_add(symbol)
 
@@ -509,20 +498,11 @@ class Compiler(object):
     def get_script_names(self):
         return self.scr_names
 
-# Checks valid GML variable name errors
-def valid_varname(name):
-    valid = True
-    if (not name[0].isalpha()) and name[0] != '_': valid = False
-    for char in name[1:]:
-        if (not char.isalnum()) and char != '_': valid = False
-    return valid
-
 def validate_varname(name, ctx):
 
     if not valid_varname(name):
         erstr = "Invalid resource name in " + ctx.label() + "."
         erstr += " Name '" + name + "' is not a valid GML name."
-        print map(lambda char: ord(char), name)
         return [erstr]
     return []
 

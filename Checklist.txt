@@ -1,8 +1,3 @@
-TEST:
-
-[x] Inheritance
-[x] Name checking
-
 IMPLEMENT:
 
 [x] Comments
@@ -14,6 +9,10 @@ IMPLEMENT:
 [x] Encryption
 [x] Scripts
 [x] var x = blank
+[x] Do named arguments the right way
+[-] Runtime errors for no room
+[-] Runtime errors for no resources
+[-] Compile error for no files matched
 [-] Syntax checking for GML
 [-] Preprocessor define’s
 [-] Duplicate resource error

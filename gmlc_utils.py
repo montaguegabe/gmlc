@@ -75,6 +75,7 @@ def line_to_symbols(string, delim_char_set, ml_comment):
     return (output, in_comment)
 
 # Explodes a line while keeping symbols. Quotes excluded
+# If delim_char_set is None then all non-name characters are delimiters
 def explode_preserve(string, delim_char_set):
     output = []
     token = ""
@@ -95,8 +96,14 @@ def explode_preserve(string, delim_char_set):
 
         # Explode if not in quotes
         should_explode = in_quotes == 0
-        if char in delim_char_set and should_explode:
 
+        delim_char = None
+        if delim_char_set == None:
+            delim_char = (not char.isalnum()) and char != '_'
+        else:
+            delim_char = char in delim_char_set
+
+        if should_explode and delim_char:
             if token: output.append(token)
             output.append(char)
             token = ""
@@ -106,7 +113,7 @@ def explode_preserve(string, delim_char_set):
             token += char
 
         # Escape from quotes
-        if not quote_started and not in_comment and not in_linecomment:
+        if not quote_started:
             if char == '"' and in_quotes == 2: in_quotes = 0
             elif char == "'" and in_quotes == 1: in_quotes = 0
 
@@ -131,3 +138,11 @@ def replace_substr(string, index, substr, new_substr):
     rest = string[index:]
     rest_new = rest.replace(substr, new_substr, 1)
     return precurs + rest_new
+
+# Checks valid GML variable name errors
+def valid_varname(name):
+    valid = True
+    if (not name[0].isalpha()) and name[0] != '_': valid = False
+    for char in name[1:]:
+        if (not char.isalnum()) and char != '_': valid = False
+    return valid

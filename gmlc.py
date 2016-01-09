@@ -118,7 +118,9 @@ def main():
 
     with open(outpath, "a") as f_out, open(tmppath, "r") as f_in:
         for compiled_line in f_in:
-            f_out.write(translator.feed(compiled_line))
+            symbols = explode_preserve(compiled_line, None)
+            for symbol in symbols:
+                f_out.write(translator.feed(symbol))
 
     # Delete temporary file
     os.remove(tmppath)

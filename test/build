@@ -1,2 +1,2 @@
 #!/bin/bash
-python gmlc.py test/test.gml -o test/output.exe -se -dne
+python gmlc.py test/test.gml -o test/output.exe -se

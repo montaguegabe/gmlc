@@ -19,7 +19,7 @@ object greg : susy {
     }
 
     event keypress(up) {
-        var text = greeting("Gabe");
+        var text = greeting();
         show_message(text);
     }
     event keypress(down) {
@@ -33,7 +33,7 @@ object greg : susy {
 script greeting(name) {
 
     var punc = ".";
-    //var name = "Gabe";
+    var name = "Gabe";
     //if (excited) punc = "!";
     return "Hello " + name + punc;
 }
