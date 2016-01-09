@@ -29,8 +29,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("files", nargs="+", help="File/s to compile. Globs allowed.")
     parser.add_argument("-o", "--output", type=str, help="Output file path, not including extension.", default="out")
-    parser.add_argument("-se", "--script-export", help="Allow parsing of exported scripts from Game Maker.", action='store_true')
+    parser.add_argument("-se", "--script-export", help="Allow parsing of exported scripts from Game Maker.", action="store_true")
     parser.add_argument("-el", "--errorlim", type=int, help="Maximum number of errors before aborting.", default=10)
+    parser.add_argument("-dne", "--dbg-no-encrypt", help="Will break the executable but share code output.", action="store_true")
     args = parser.parse_args()
     
     # Find files to compile
@@ -113,7 +114,7 @@ def main():
     resource_names = compiler.get_resource_names()
     script_names = compiler.get_script_names()
     exe_size = os.path.getsize(exepath)
-    translator = SblTranslator(resource_names, script_names, exe_size)
+    translator = SblTranslator(resource_names, script_names, exe_size, not args.dbg_no_encrypt)
 
     with open(outpath, "a") as f_out, open(tmppath, "r") as f_in:
         for compiled_line in f_in:

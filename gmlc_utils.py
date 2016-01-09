@@ -74,6 +74,45 @@ def line_to_symbols(string, delim_char_set, ml_comment):
     if token: output.append((token, token_idx))
     return (output, in_comment)
 
+# Explodes a line while keeping symbols. Quotes excluded
+def explode_preserve(string, delim_char_set):
+    output = []
+    token = ""
+    in_quotes = 0
+    quote_started = False
+
+    for i, char in enumerate(string):
+
+        # Determine if in quote literal (including quotation marks)
+        if char == '"' and in_quotes == 0:
+            in_quotes = 2
+            quote_started = True
+        elif char == "'" and in_quotes == 0:
+            in_quotes = 1
+            quote_started = True
+        else:
+            quote_started = False
+
+        # Explode if not in quotes
+        should_explode = in_quotes == 0
+        if char in delim_char_set and should_explode:
+
+            if token: output.append(token)
+            output.append(char)
+            token = ""
+
+        # Pass on characters not in comments
+        else:
+            token += char
+
+        # Escape from quotes
+        if not quote_started and not in_comment and not in_linecomment:
+            if char == '"' and in_quotes == 2: in_quotes = 0
+            elif char == "'" and in_quotes == 1: in_quotes = 0
+
+    if token: output.append(token)
+    return output
+
 # Flattens a 2D list
 def flatten(list2d):
     return [item for sublist in list2d for item in sublist]
