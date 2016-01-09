@@ -19,19 +19,19 @@ object camera {
         speed2 = 1;
         scrollspeed = 8;
 
-        MoveCamera( );
+        MoveCamera();
     }
 
-    event step() {
-        MoveCamera( );
+    event step(step_normal) {
+        MoveCamera();
     }
 
     event keyboard(97) {
-        Move( 0, roty - 90, speed2 );
+        Move(0, roty - 90, speed2);
     }
 
     event keyboard(100) {
-        Move( 0, roty + 90, speed2 );
+        Move(0, roty + 90, speed2);
     }
 
     event keyboard(115) {
@@ -42,13 +42,13 @@ object camera {
         z += speed2;
     }
 
-    event mouse_wheel_up() {
-        Move( rotx, roty, speed2 * scrollspeed );
+    event mouse(mouse_wheel_up) {
+        Move(rotx, roty, speed2 * scrollspeed);
         scrollspeed -= 0.2;
     }
 
-    event mouse_wheel_down() {
-        Move( rotx, roty, -speed2 * scrollspeed );
+    event mouse(mouse_wheel_down) {
+        Move(rotx, roty, -speed2 * scrollspeed);
         scrollspeed += 0.2;
     }
 }

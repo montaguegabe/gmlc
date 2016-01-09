@@ -39,6 +39,7 @@ class SblTranslator(object):
     def feed(self, symbol):
 
         replacement = None
+        prefix = None
 
         # Categorize
         newline = symbol == "\n" or symbol == "\r"
@@ -66,9 +67,11 @@ class SblTranslator(object):
         if symbol == "this_resource": replacement = "global.__itp_res";
 
         # Translate script executions
-        if not whitespace:
-            if self.script_construct_stage == 2:
-                replacement = "," + symbol if symbol != ")" else None
+        if self.script_construct_stage == 2:
+            self.script_construct_stage = 0
+            prefix = ","
+
+        elif not whitespace:
 
             if self.script_construct_stage == 1 and symbol == "(":
                 self.script_construct_stage = 2
@@ -86,6 +89,7 @@ class SblTranslator(object):
             self.history.pop()
 
         output = replacement if replacement != None else symbol
+        if prefix != None: output = prefix + output
 
         # Encrypt
         enc_output = ""

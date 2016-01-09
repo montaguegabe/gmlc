@@ -7,9 +7,10 @@ object sound_dropper {
         x = 0;
         y = 0;
         z = 128;
-        file = "Media/SoundDropper.u3d";
-        LoadMesh( );
-        Step( );
+        show_message(working_directory);
+        file = program_directory + "/Media/SoundDropper.u3d";
+        LoadMesh();
+        Step();
 
         // Sound dropper variables
         createwait = 200;
@@ -17,17 +18,17 @@ object sound_dropper {
     }
 
     event destroy() {
-        Destroy( );
+        Destroy();
     }
 
     event alarm(0) {
-        instance_create( id, 0, sphere );
+        instance_create(id, 0, sphere);
         scalz = 1.00001;
         alarm[0] = createwait;
     }
 
-    event step() {
-        scalz += ( 0.5 - scalz ) / 16;
-        Step( );
+    event step(step_normal) {
+        scalz += (0.5 - scalz) / 16;
+        Step();
     }
 }

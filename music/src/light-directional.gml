@@ -14,14 +14,14 @@ object light_directional {
         g = 128;
         b = 128;
 
-        LightDirectional( );
+        LightDirectional();
     }
 
     event destroy() {
-        Destroy( );
+        Destroy();
     }
 
-    event step() {
-        Step( );
+    event step(step_normal) {
+        Step();
     }
 }

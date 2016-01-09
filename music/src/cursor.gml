@@ -17,9 +17,9 @@ object cursor {
         originy = 0.5;
         originz = 0.5;
         phys = false;
-        CreateCube( );
-        SetMaterial( 255, 0, 0, 255 );
-        sc_vector = CreateVector( -1, 0, 0, 0 );
+        CreateCube();
+        SetMaterial(255, 0, 0, 255);
+        sc_vector = CreateVector(-1, 0, 0, 0);
 
         drawing = false;
         drawing_inst = noone;
@@ -30,31 +30,31 @@ object cursor {
     }
 
     event destroy() {
-        ReleaseVector( sc_vector );
-        Destroy( );
+        ReleaseVector(sc_vector);
+        Destroy();
     }
 
-    event step() {
+    event step(step_normal) {
         var ray, rotx2, roty2;
-        ScreenCoordToVector( sc_vector, mouse_x, mouse_y, 0 );
-        rotx2 = CalculateVectorLongitude( sc_vector );
-        roty2 = CalculateVectorLatitude( sc_vector );
-        ray = CheckRayIntersection( raycast_plane, camera.x, camera.y, camera.z, rotx2, roty2, 0 );
-        CreateDirectionVector( sc_vector, rotx2, roty2 );
-        x = GetVector( sc_vector, 1 ) * ray + camera.x;
-        y = GetVector( sc_vector, 2 ) * ray + camera.y;
-        z = GetVector( sc_vector, 3 ) * ray + camera.z;
-        Step( );
+        ScreenCoordToVector(sc_vector, mouse_x, mouse_y, 0);
+        rotx2 = CalculateVectorLongitude(sc_vector);
+        roty2 = CalculateVectorLatitude(sc_vector);
+        ray = CheckRayIntersection(raycast_plane, camera.x, camera.y, camera.z, rotx2, roty2, 0);
+        CreateDirectionVector(sc_vector, rotx2, roty2);
+        x = GetVector(sc_vector, 1) * ray + camera.x;
+        y = GetVector(sc_vector, 2) * ray + camera.y;
+        z = GetVector(sc_vector, 3) * ray + camera.z;
+        Step();
 
         // Create instances
-        if( global.lmb == 1 ) {
+        if(global.lmb == 1) {
             drawing = true;
             phys = false;
             draw_start_x = x;
             draw_start_z = z;
             draw_rot = point_direction(draw_start_x, draw_start_z, x, z);
             draw_length = max(point_distance(draw_start_x, draw_start_z, x, z), 1);
-            drawing_inst = instance_create( id, 0, platform );
+            drawing_inst = instance_create(id, 0, platform);
 
         } else if (global.lmb == 0) {
             if (drawing_inst != noone) {

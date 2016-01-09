@@ -13,17 +13,17 @@ object raycast_plane {
         x = -50000;
         y = 0;
         z = -50000;
-        CreateFloor( );
-        SetMaterial( 0, 255, 255, 0 );
-        Step( );
+        CreateFloor();
+        SetMaterial(0, 255, 255, 0);
+        Step();
     }
 
-    event step() {
+    event step(step_normal) {
         x = camera.x;
         y = camera.y;
         z = camera.z;
         rotx = -90;
         roty = 0;
-        Move( rotx, roty,  );
+        Move(rotx, roty, 0);
     }
 }

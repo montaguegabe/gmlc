@@ -333,7 +333,7 @@ class Compiler(object):
 
             elif ctx.stage == 2:
                 if is_number(symbol):
-                    returned_output = output(returned_output, symbol)
+                    returned_output = output(returned_output, symbol + "\n")
                     ctx.advance()
                 else:
 
@@ -379,21 +379,6 @@ class Compiler(object):
                                     returned_output = output(returned_output, str(EVENT_NUMS[mod_symbol]) + "\n")
 
                         ctx.advance()
-
-                    """prefix = symbol[:3]
-                    if prefix == "mb_" or prefix == "vk_": mod_symbol = symbol
-                    if symbol == ')':
-                        returned_output = output(returned_output, " 1\n")
-                        ctx.stage = 4
-
-                    # Look up in event keys
-                    elif mod_symbol not in KEYS.keys():
-                        errors.append("Unexpected event argument: '" + symbol + "'.")
-                        ctx.advance()
-                    else:
-                        # Output the mapping
-                        returned_output = output(returned_output, " " + str(KEYS[mod_symbol]) + "\n")
-                        ctx.advance()"""
 
             elif ctx.stage == 3:
                 errors.extend(validate_symbol(symbol, ctx, [')']))
