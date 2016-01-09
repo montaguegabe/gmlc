@@ -7,8 +7,7 @@ object sound_dropper {
         x = 0;
         y = 0;
         z = 128;
-        show_message(working_directory);
-        file = program_directory + "/Media/SoundDropper.u3d";
+        file = program_directory + "\Media\SoundDropper.u3d";
         LoadMesh();
         Step();
 

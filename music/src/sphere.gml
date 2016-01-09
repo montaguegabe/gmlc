@@ -14,12 +14,11 @@ object sphere {
         scalx = 0.25;
         scaly = 0.25;
         scalz = 0.25;
-        file = program_directory + "Media/Sphere.3ds";
+        file = program_directory + "\Media\Sphere.3ds";
         LoadMesh();
         SetModelMaterial(0, 131, 240, 94, 255);
-        //ApplyCelShading(1.5, 0, 0, 0, 255);
 
-        body = GMBULLET_AddRigidBody(4/3 * pi * power(scalx, 3) * d_aluminum, 1, global.shape_sphere, x, y, z, rotx, roty, rotz);
+        body = GMBULLET_AddRigidBody(4/3 * pi * power(scalx, 3) * 2.7, 1, global.shape_sphere, x, y, z, rotx, roty, rotz);
         GMBULLET_SetCollisionGroupMask(body, 1, 30);
         GMBULLET_AssociateBodyWithInstance(body, id);
         GMBULLET_SetDeactivationThresholds(body, 0.01, 0.5);

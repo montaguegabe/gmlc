@@ -26,19 +26,19 @@ object camera {
         MoveCamera();
     }
 
-    event keyboard(97) {
+    event keyboard("a") {
         Move(0, roty - 90, speed2);
     }
 
-    event keyboard(100) {
+    event keyboard("d") {
         Move(0, roty + 90, speed2);
     }
 
-    event keyboard(115) {
+    event keyboard("s") {
         z -= speed2;
     }
 
-    event keyboard(119) {
+    event keyboard("w") {
         z += speed2;
     }
 
