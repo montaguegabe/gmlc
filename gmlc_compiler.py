@@ -105,8 +105,8 @@ class Compiler(object):
 
         # Determine whether padding is necessary
         last_char = self.prev_codeblock_symbols[0][-1]
-        ended_with_name = last_char.isalnum() or last_char == '_'
-        starts_with_name = symbol[0].isalnum() or symbol[0] == '_'
+        ended_with_name = last_char.isalnum() or last_char == '_' or last_char == "'" or last_char == '"'
+        starts_with_name = symbol[0].isalnum() or symbol[0] == '_' or symbol[0] == "'" or symbol[0] == '"'
         if last_char == ';' or last_char == '}' or last_char == '{': self.codeblock += "\n"
         if ended_with_name and starts_with_name: self.codeblock += " "
 
@@ -181,7 +181,7 @@ class Compiler(object):
                 errors.extend(validate_varname(symbol, ctx))
                 if symbol not in self.obj_names:
                     errors.append("No declared object matches name '" + symbol + "'.")
-                returned_output = output(returned_output, "object_set_parent(global.__itp_res," + symbol + ");\n", True)
+                returned_output = output(returned_output, "object_set_parent(this_resource," + symbol + ");\n", True)
                 ctx.advance()
 
             elif ctx.stage == 3:
@@ -572,6 +572,6 @@ def parse_properties(codeblock, prefix, errors):
             errors.append("Unrecognized value type set for property '" + key + "' of " + prefix + ". Only number, boolean, and string literals are permitted.")
             return None
         
-        importstr += prefix + "_set_" + key + "(global.__itp_res," + mod_value + ");\n"
+        importstr += prefix + "_set_" + key + "(this_resource," + mod_value + ");\n"
 
     return importstr

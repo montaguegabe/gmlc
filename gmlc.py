@@ -30,8 +30,10 @@ def main():
     parser.add_argument("files", nargs="+", help="File/s to compile. Globs allowed.")
     parser.add_argument("-o", "--output", type=str, help="Output file path, not including extension.", default="out")
     parser.add_argument("-se", "--script-export", help="Allow parsing of exported scripts from Game Maker.", action="store_true")
+    parser.add_argument("-r", "--release", help="Minify GML code. Runtime errors will be illegible.", action="store_true")
     parser.add_argument("-el", "--errorlim", type=int, help="Maximum number of errors before aborting.", default=10)
     parser.add_argument("-dne", "--dbg-no-encrypt", help="Will break the executable but share code output.", action="store_true")
+    parser.add_argument("-minstr", "--minify-strings", help="Will minify strings that consist solely of a name.", action="store_true")
     args = parser.parse_args()
     
     # Find files to compile
@@ -94,6 +96,10 @@ def main():
         final_results = compiler.feed_final()
         error_num = process_feed_results(final_results, alerts)
 
+    # Simple warnings
+    if args.dbg_no_encrypt:
+        alerts.append((AlertType.WARN, None, None, None, "Encryption is disabled. Executable is not runnable."))
+
     # Notify the user of results
     map(lambda alert: print_alert(alert), alerts)
 
@@ -114,13 +120,15 @@ def main():
     resource_names = compiler.get_resource_names()
     script_names = compiler.get_script_names()
     exe_size = os.path.getsize(exepath)
-    translator = SblTranslator(resource_names, script_names, exe_size, not args.dbg_no_encrypt)
+    translator = SblTranslator(resource_names, script_names, exe_size, args.release, not args.dbg_no_encrypt)
 
     with open(outpath, "a") as f_out, open(tmppath, "r") as f_in:
         for compiled_line in f_in:
             symbols = explode_preserve(compiled_line, None)
             for symbol in symbols:
                 f_out.write(translator.feed(symbol))
+
+    print translator.mini_maps
 
     # Delete temporary file
     os.remove(tmppath)
@@ -138,7 +146,7 @@ def print_alert(alert):
         print BColors.WARNING + "WARNING" + BColors.ENDC,
 
     # Print location
-    print "in file", source + ", line", line, "col", col
+    if source: print "in file", source + ", line", line, "col", col
 
     # Print string
     print string

@@ -1,2 +1,2 @@
 #!/bin/bash
-python gmlc.py music/src/dependencies/*.gml music/src/*.gml music/src/rooms/*.gml -o music/output.exe -se
+python gmlc.py -o music/output.exe -se music/src/dependencies/*.gml music/src/*.gml music/src/rooms/*.gml

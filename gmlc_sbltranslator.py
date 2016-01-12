@@ -1,5 +1,6 @@
 from gmlc_compiler import CHAR_SYMBOLS
 from gmlc_utils import line_to_symbols, replace_substr, valid_varname
+from gmlc_gmnames import GM_NAMES
 
 pword = "kyqE?EcR:Q<7n~+U"
 pword_len = len(pword)
@@ -14,7 +15,7 @@ CODEBLOCK_DIRECTIVES = set([
 ])
 
 class SblTranslator(object):
-    def __init__(self, resnames, scrnames, file_size, encrypt=True):
+    def __init__(self, resnames, scrnames, file_size, minify=False, encrypt=True):
         super(SblTranslator, self).__init__()
         self.resnames = resnames
         self.scrnames = scrnames
@@ -33,10 +34,39 @@ class SblTranslator(object):
         # Whether previous was a script
         self.script_construct_stage = 0
 
+        self.minify = minify
+        self.mini_maps = {}
+        self.mini_num = 1
+
         # Previous code block symbols (non whitespace) added
         self.history = [" "] * HISTORY_LEN
 
+        # Minify names
+        if self.minify:
+            self.resnames = map(lambda name: self.minify_symbol(name), self.resnames)
+            self.scrnames = map(lambda name: self.minify_symbol(name), self.scrnames)
+
+    def minify_symbol(self, symbol):
+        if symbol and (symbol[0].isalpha() or symbol[0] == "_"):
+            if symbol not in GM_NAMES:
+                if symbol not in self.mini_maps:
+                    if symbol[:2] == "__" and symbol[2:] in self.mini_maps:
+                        new_sym = "__" + self.mini_maps[symbol[2:]]
+                    else:
+                        new_sym = "v" + str(self.mini_num)
+
+                    self.mini_maps[symbol] = new_sym
+                    self.mini_num += 1
+                    return new_sym
+                else:
+                    return self.mini_maps[symbol]
+
+        return symbol
+
     def feed(self, symbol):
+
+        # Minify
+        if self.minify: symbol = self.minify_symbol(symbol)
 
         replacement = None
         prefix = None
