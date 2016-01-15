@@ -128,8 +128,6 @@ def main():
             for symbol in symbols:
                 f_out.write(translator.feed(symbol))
 
-    print translator.mini_maps
-
     # Delete temporary file
     os.remove(tmppath)
 
